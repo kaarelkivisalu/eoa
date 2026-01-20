@@ -13,8 +13,9 @@ router = APIRouter(tags=["schools"])
 
 
 @router.get("/school-ids")
-def list_school_ids(*, session: Session = Depends(get_session)) -> list[int]:
-    return session.execute(select(School.id).order_by(School.id)).scalars().all()
+def list_school_ids(*, session: Session = Depends(get_session)) -> list[dict[str, Any]]:
+    rows = session.execute(select(School.id, School.name).order_by(School.id)).all()
+    return [{"school_id": r.id, "school_name": r.name} for r in rows]
 
 
 def _get_school_or_404(*, school_id: int, session: Session) -> School:
