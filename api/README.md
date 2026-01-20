@@ -21,6 +21,7 @@ curl -L 'http://localhost:8000/subcontests/1/results?format=csv'
 ### List valid `subcontest_id` values (with metadata)
 
 - `GET /subcontest-ids`
+- `GET /subcontest-ids?subject_abbrev=efo`
 
 ```bash
 curl 'http://localhost:8000/subcontest-ids' | jq
