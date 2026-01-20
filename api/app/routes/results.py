@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import csv
 import io
+from enum import Enum
 from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException, Query
@@ -13,6 +14,11 @@ from app.db import get_session
 from app.models import Contest, Contestant, ContestantField, Subcontest, SubcontestColumn
 
 router = APIRouter(tags=["results"])
+
+
+class ResultsFormat(str, Enum):
+    json = "json"
+    csv = "csv"
 
 
 def _contest_display_name(subcontest: Subcontest) -> str:
@@ -28,14 +34,14 @@ def _contest_display_name(subcontest: Subcontest) -> str:
 def get_subcontest_results(
     *,
     subcontest_id: int,
-    format: str = Query("json", pattern="^(json|csv)$"),
+    format: ResultsFormat = Query(ResultsFormat.json),
     session: Session = Depends(get_session),
 ):
     payload = _get_subcontest_results(
         subcontest_id=subcontest_id,
         session=session,
     )
-    if format == "json":
+    if format == ResultsFormat.json:
         return payload
     return _as_csv(subcontest_id=subcontest_id, payload=payload)
 
