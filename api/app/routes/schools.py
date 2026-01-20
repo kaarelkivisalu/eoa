@@ -1,23 +1,23 @@
 from __future__ import annotations
 
-from typing import Any
-
 from fastapi import APIRouter, Depends, HTTPException, Path, Query, Response
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.db import get_session
 from app.models import Contestant, Person, School, t_mentor
+from app.schemas import SchoolParticipantsResponse, SchoolSummary
 
 router = APIRouter(tags=["schools"])
 
 
-@router.get("/schools")
-def list_schools(*, session: Session = Depends(get_session)) -> list[dict[str, Any]]:
+@router.get("/schools", response_model=list[SchoolSummary])
+def list_schools(*, session: Session = Depends(get_session)) -> list[SchoolSummary]:
     rows = session.execute(select(School.id, School.name).order_by(School.id)).all()
-    return [{"school_id": r.id, "school_name": r.name} for r in rows]
+    return [SchoolSummary(school_id=r.id, school_name=r.name) for r in rows]
 
-@router.get("/schools/search")
+
+@router.get("/schools/search", response_model=list[SchoolSummary])
 def search_schools(
     *,
     q: str = Query(..., min_length=1, description="Substring search in school name."),
@@ -25,7 +25,7 @@ def search_schools(
     limit: int = Query(20, ge=1, le=200),
     response: Response,
     session: Session = Depends(get_session),
-) -> list[dict[str, Any]]:
+) -> list[SchoolSummary]:
     query = q.strip()
     if not query:
         raise HTTPException(status_code=422, detail="Query must not be empty")
@@ -46,7 +46,7 @@ def search_schools(
     if has_more:
         response.headers["X-Result-Next-Offset"] = str(offset + limit)
 
-    return [{"school_id": r.id, "school_name": r.name} for r in rows[:limit]]
+    return [SchoolSummary(school_id=r.id, school_name=r.name) for r in rows[:limit]]
 
 
 def _get_school_or_404(*, school_id: int, session: Session) -> School:
@@ -56,12 +56,12 @@ def _get_school_or_404(*, school_id: int, session: Session) -> School:
     return school
 
 
-@router.get("/schools/{school_id}/students")
+@router.get("/schools/{school_id}/students", response_model=SchoolParticipantsResponse)
 def school_students(
     *,
     school_id: int = Path(..., gt=0),
     session: Session = Depends(get_session),
-) -> dict[str, Any]:
+) -> SchoolParticipantsResponse:
     school = _get_school_or_404(school_id=school_id, session=session)
 
     rows = session.execute(
@@ -78,7 +78,8 @@ def school_students(
         .order_by(func.count().desc(), Person.name)
     ).all()
 
-    return {
+    return SchoolParticipantsResponse.model_validate(
+        {
         "school_id": school.id,
         "school_name": school.name,
         "students": [
@@ -89,15 +90,16 @@ def school_students(
             }
             for r in rows
         ],
-    }
+        }
+    )
 
 
-@router.get("/schools/{school_id}/mentors")
+@router.get("/schools/{school_id}/mentors", response_model=SchoolParticipantsResponse)
 def school_mentors(
     *,
     school_id: int = Path(..., gt=0),
     session: Session = Depends(get_session),
-) -> dict[str, Any]:
+) -> SchoolParticipantsResponse:
     school = _get_school_or_404(school_id=school_id, session=session)
 
     student = Person.__table__.alias("student")
@@ -120,7 +122,8 @@ def school_mentors(
         .order_by(func.count().desc(), mentor_person.c.name)
     ).all()
 
-    return {
+    return SchoolParticipantsResponse.model_validate(
+        {
         "school_id": school.id,
         "school_name": school.name,
         "mentors": [
@@ -131,4 +134,5 @@ def school_mentors(
             }
             for r in rows
         ],
-    }
+        }
+    )
