@@ -21,6 +21,7 @@ def list_schools(*, session: Session = Depends(get_session)) -> list[dict[str, A
 def search_schools(
     *,
     q: str = Query(..., min_length=1, description="Substring search in school name."),
+    offset: int = Query(0, ge=0, description="Pagination offset."),
     limit: int = Query(20, ge=1, le=200),
     response: Response,
     session: Session = Depends(get_session),
@@ -32,14 +33,18 @@ def search_schools(
     rows = session.execute(
         select(School.id, School.name)
         .where(School.name.like(f"%{query}%"))
-        .order_by(School.name)
+        .order_by(School.name, School.id)
+        .offset(offset)
         .limit(limit + 1)
     ).all()
 
     has_more = len(rows) > limit
     response.headers["X-Result-Limit"] = str(limit)
+    response.headers["X-Result-Offset"] = str(offset)
     response.headers["X-Result-Has-More"] = "true" if has_more else "false"
     response.headers["X-Result-Count"] = str(min(len(rows), limit))
+    if has_more:
+        response.headers["X-Result-Next-Offset"] = str(offset + limit)
 
     return [{"school_id": r.id, "school_name": r.name} for r in rows[:limit]]
 

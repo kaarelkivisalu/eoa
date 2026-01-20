@@ -16,6 +16,7 @@ router = APIRouter(tags=["people"])
 def search_people(
     *,
     q: str = Query(..., min_length=1, description="Substring search in person name."),
+    offset: int = Query(0, ge=0, description="Pagination offset."),
     limit: int = Query(20, ge=1, le=200),
     response: Response,
     session: Session = Depends(get_session),
@@ -28,14 +29,18 @@ def search_people(
         select(Person.id, Person.name)
         .where(Person.publishable == 1)
         .where(Person.name.like(f"%{query}%"))
-        .order_by(Person.name)
+        .order_by(Person.name, Person.id)
+        .offset(offset)
         .limit(limit + 1)
     ).all()
 
     has_more = len(rows) > limit
     response.headers["X-Result-Limit"] = str(limit)
+    response.headers["X-Result-Offset"] = str(offset)
     response.headers["X-Result-Has-More"] = "true" if has_more else "false"
     response.headers["X-Result-Count"] = str(min(len(rows), limit))
+    if has_more:
+        response.headers["X-Result-Next-Offset"] = str(offset + limit)
 
     return [{"person_id": r.id, "person_name": r.name} for r in rows[:limit]]
 
