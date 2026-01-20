@@ -7,6 +7,7 @@
 - `GET /contest/{subject}/{season}` → contest types
 - `GET /contest/{subject}/{season}/{type}` → age groups
 - `GET /contest/{subject}/{season}/{type}/{age_group}` → results (`format=json|csv`)
+- `GET /contest/by-subcontest-id/{subcontest_id}` → results (`format=json|csv`)
 
 Examples:
 
@@ -17,6 +18,7 @@ curl 'http://localhost:8000/contest/efo/2023-2024' | jq
 curl 'http://localhost:8000/contest/efo/2023-2024/lahtine' | jq
 curl 'http://localhost:8000/contest/efo/2023-2024/lahtine/12.%20klass' | jq
 curl -L 'http://localhost:8000/contest/efo/2023-2024/lahtine/12.%20klass?format=csv'
+curl 'http://localhost:8000/contest/by-subcontest-id/1' | jq
 ```
 
 `/subjects` was removed; use `GET /contest` for the subject list (abbrev + full name).
