@@ -12,7 +12,7 @@ Examples:
 curl 'http://localhost:8000/subcontests/1/results' | jq
 ```
 
-### List valid `subcontest_id` values
+### List valid `subcontest_id` values (with metadata)
 
 - `GET /subcontest-ids`
 
