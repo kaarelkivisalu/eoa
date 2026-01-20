@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from enum import Enum
+
 # NOTE: This map is intentionally hardcoded (as requested). If a new subject is added
 # to the DB, update this mapping.
 SUBJECT_ABBREV: dict[str, str] = {
@@ -24,3 +26,24 @@ SUBJECT_ABBREV: dict[str, str] = {
     "Inimeseõpetus": "ini",
 }
 
+
+class SubjectAbbrev(str, Enum):
+    efo = "efo"
+    eko = "eko"
+    eio = "eio"
+    ebo = "ebo"
+    elo = "elo"
+    emo = "emo"
+    ast = "ast"
+    fil = "fil"
+    mte = "mte"
+    lin = "lin"
+    usu = "usu"
+    ema = "ema"
+    ing = "ing"
+    sak = "sak"
+    vem = "vem"
+    vvk = "vvk"
+    pra = "pra"
+    geo = "geo"
+    ini = "ini"
