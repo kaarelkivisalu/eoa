@@ -11,3 +11,11 @@ Examples:
 ```bash
 curl 'http://localhost:8000/subcontests/1/results' | jq
 ```
+
+### List valid `subcontest_id` values
+
+- `GET /subcontest-ids`
+
+```bash
+curl 'http://localhost:8000/subcontest-ids' | jq
+```
