@@ -26,7 +26,7 @@ curl 'http://localhost:8000/subcontests/1' | jq
 ### People
 
 - `GET /contestant/{person_id}` (only for publishable persons)
-- `GET /mentor/{mentor_id}` (only for publishable mentors; only includes publishable students)
+- `GET /mentor/{person_id}` (only for publishable mentors; only includes publishable students)
 - `GET /people/search?q=...&offset=0&limit=20` (only returns publishable persons; check `X-Result-Has-More` / `X-Result-Next-Offset`)
 
 ### Schools

@@ -118,14 +118,14 @@ def contestant(
     return out
 
 
-@router.get("/mentor/{mentor_id}")
+@router.get("/mentor/{person_id}")
 def mentor(
     *,
-    mentor_id: int = Path(..., gt=0, description="Mentor person ID (must be publishable)."),
+    person_id: int = Path(..., gt=0, description="Mentor person ID (must be publishable)."),
     session: Session = Depends(get_session),
 ) -> list[dict[str, Any]]:
     mentor_row = session.execute(
-        select(Person.name, Person.publishable).where(Person.id == mentor_id)
+        select(Person.name, Person.publishable).where(Person.id == person_id)
     ).one_or_none()
     if mentor_row is None or mentor_row.publishable != 1:
         raise HTTPException(status_code=404, detail="Not found")
@@ -154,7 +154,7 @@ def mentor(
         .join(Type, Contest.type_id == Type.id, isouter=True)
         .join(AgeGroup, Contestant.age_group_id == AgeGroup.id, isouter=True)
         .join(mentor_person, t_mentor.c.mentor_id == mentor_person.c.id)
-        .where(t_mentor.c.mentor_id == mentor_id)
+        .where(t_mentor.c.mentor_id == person_id)
         .where(student.c.publishable == 1)
         .where(mentor_person.c.publishable == 1)
         .order_by(Contest.year.is_(None), Contest.year.desc(), Type.name, AgeGroup.name)
