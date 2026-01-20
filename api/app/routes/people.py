@@ -101,6 +101,7 @@ def mentor(
 
     # Only include students that are publishable too.
     student = Person.__table__.alias("student")
+    mentor_person = Person.__table__.alias("mentor_person")
 
     rows = session.execute(
         select(
@@ -120,8 +121,10 @@ def mentor(
         .join(Subject, Contest.subject_id == Subject.id, isouter=True)
         .join(Type, Contest.type_id == Type.id, isouter=True)
         .join(AgeGroup, Contestant.age_group_id == AgeGroup.id, isouter=True)
+        .join(mentor_person, t_mentor.c.mentor_id == mentor_person.c.id)
         .where(t_mentor.c.mentor_id == mentor_id)
         .where(student.c.publishable == 1)
+        .where(mentor_person.c.publishable == 1)
         .order_by(Contest.year.is_(None), Contest.year.desc(), Type.name, AgeGroup.name)
     ).all()
 
