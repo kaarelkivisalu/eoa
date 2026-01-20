@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from fastapi import APIRouter, Depends, HTTPException, Path, Query
+from fastapi import APIRouter, Depends, HTTPException, Path, Query, Response
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -17,6 +17,7 @@ def search_people(
     *,
     q: str = Query(..., min_length=1, description="Substring search in person name."),
     limit: int = Query(20, ge=1, le=200),
+    response: Response,
     session: Session = Depends(get_session),
 ) -> list[dict[str, Any]]:
     query = q.strip()
@@ -28,10 +29,15 @@ def search_people(
         .where(Person.publishable == 1)
         .where(Person.name.like(f"%{query}%"))
         .order_by(Person.name)
-        .limit(limit)
+        .limit(limit + 1)
     ).all()
 
-    return [{"person_id": r.id, "person_name": r.name} for r in rows]
+    has_more = len(rows) > limit
+    response.headers["X-Result-Limit"] = str(limit)
+    response.headers["X-Result-Has-More"] = "true" if has_more else "false"
+    response.headers["X-Result-Count"] = str(min(len(rows), limit))
+
+    return [{"person_id": r.id, "person_name": r.name} for r in rows[:limit]]
 
 
 def _season(year: int | None) -> str | None:
