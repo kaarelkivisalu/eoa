@@ -36,7 +36,7 @@ def list_subcontest_ids(
             contest_name = f"{contest_name} ({year}/{year + 1})".strip()
         return contest_name
 
-    def subject_abbrev(subject_name: str | None) -> str | None:
+    def abbrev_for_subject(subject_name: str | None) -> str | None:
         if subject_name is None:
             return None
         return SUBJECT_ABBREV.get(subject_name)
@@ -65,7 +65,7 @@ def list_subcontest_ids(
         contest = subcontest.contest
         year = contest.year
         subj_name = maybe_name(contest.subject)
-        subj_abbrev = subject_abbrev(subj_name)
+        subj_abbrev = abbrev_for_subject(subj_name)
         if subj_name is not None and subj_abbrev is None:
             missing_subject_abbrev.add(subj_name)
 
