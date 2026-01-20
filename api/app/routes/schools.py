@@ -32,7 +32,7 @@ def search_schools(
 
     rows = session.execute(
         select(School.id, School.name)
-        .where(School.name.like(f"%{query}%"))
+        .where(School.name.contains(query, autoescape=True))
         .order_by(School.name, School.id)
         .offset(offset)
         .limit(limit + 1)
