@@ -7,7 +7,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session, joinedload
 
 from app.db import get_session
-from app.domain.subjects import SUBJECT_ABBREV
+from app.domain.subjects import SUBJECT_ABBREV, SubjectAbbrev
 from app.models import Contest, Subcontest
 
 router = APIRouter(tags=["subcontests"])
@@ -16,7 +16,7 @@ router = APIRouter(tags=["subcontests"])
 @router.get("/subcontest-ids")
 def list_subcontest_ids(
     *,
-    subject_abbrev: str | None = Query(
+    subject_abbrev: SubjectAbbrev | None = Query(
         None,
         description="Optional filter by subject abbreviation (e.g. efo, eko, eio, ebo, elo, emo).",
     ),
@@ -41,9 +41,7 @@ def list_subcontest_ids(
             return None
         return SUBJECT_ABBREV.get(subject_name)
 
-    subject_filter = subject_abbrev.lower().strip() if subject_abbrev is not None else None
-    if subject_filter is not None and subject_filter not in set(SUBJECT_ABBREV.values()):
-        raise HTTPException(status_code=400, detail="Invalid subject_abbrev")
+    subject_filter = subject_abbrev.value if subject_abbrev is not None else None
 
     subcontests = (
         session.execute(
