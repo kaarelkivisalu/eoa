@@ -3,7 +3,7 @@ from __future__ import annotations
 import re
 from typing import Any
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Path, Query
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
@@ -17,7 +17,7 @@ router = APIRouter(tags=["subcontest"])
 
 def _parse_season_start_year(season: str) -> int:
     s = season.strip()
-    m = re.match(r"^(?P<y1>\\d{4})(?:[-_](?P<y2>\\d{4}))?$", s)
+    m = re.match(r"^(?P<y1>\d{4})(?:[-_](?P<y2>\d{4}))?$", s)
     if not m:
         raise HTTPException(status_code=400, detail="Invalid season format")
     y1 = int(m.group("y1"))
@@ -79,7 +79,12 @@ def list_seasons(
 def list_contest_types(
     *,
     subject_abbrev: SubjectAbbrev,
-    season: str,
+    season: str = Path(
+        ...,
+        description="School-year season in format YYYY-YYYY (end year must be start year + 1).",
+        pattern=r"^\d{4}[-_]\d{4}$",
+        examples=["2017-2018"],
+    ),
     session: Session = Depends(get_session),
 ) -> list[str]:
     subject_name = SUBJECT_BY_ABBREV.get(subject_abbrev.value)
@@ -108,7 +113,12 @@ def list_contest_types(
 def list_age_groups(
     *,
     subject_abbrev: SubjectAbbrev,
-    season: str,
+    season: str = Path(
+        ...,
+        description="School-year season in format YYYY-YYYY (end year must be start year + 1).",
+        pattern=r"^\d{4}[-_]\d{4}$",
+        examples=["2017-2018"],
+    ),
     contest_type: str,
     session: Session = Depends(get_session),
 ) -> list[str]:
@@ -142,7 +152,12 @@ def list_age_groups(
 def get_results(
     *,
     subject_abbrev: SubjectAbbrev,
-    season: str,
+    season: str = Path(
+        ...,
+        description="School-year season in format YYYY-YYYY (end year must be start year + 1).",
+        pattern=r"^\d{4}[-_]\d{4}$",
+        examples=["2017-2018"],
+    ),
     contest_type: str,
     age_group: str,
     format: ResultsFormat = Query(ResultsFormat.json),
@@ -183,4 +198,3 @@ def get_results(
     if format == ResultsFormat.json:
         return payload
     return payload_as_csv(subcontest_id=subcontest_id, payload=payload)
-
