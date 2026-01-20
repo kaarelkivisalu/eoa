@@ -23,7 +23,10 @@ def _parse_season_start_year(season: str) -> int:
     y1 = int(m.group("y1"))
     y2 = m.group("y2")
     if y2 is not None and int(y2) != y1 + 1:
-        raise HTTPException(status_code=400, detail="Invalid season (expected end year = start year + 1)")
+        raise HTTPException(
+            status_code=400,
+            detail="Invalid season (expected end year = start year + 1)",
+        )
     return y1
 
 
@@ -47,7 +50,10 @@ def list_subjects(*, session: Session = Depends(get_session)) -> list[SubjectLis
             detail=f"Missing hardcoded abbreviations for subjects: {', '.join(sorted(missing))}",
         )
 
-    return [SubjectListItem(subject_abbrev=SUBJECT_ABBREV[name], subject=name) for name in subject_names]
+    return [
+        SubjectListItem(subject_abbrev=SUBJECT_ABBREV[name], subject=name)
+        for name in subject_names
+    ]
 
 
 @router.get("/contest/{subject}", response_model=list[str])
@@ -195,7 +201,9 @@ def get_results(
     if not candidates:
         raise HTTPException(status_code=404, detail="No matching subcontest")
     if len(candidates) > 1:
-        raise HTTPException(status_code=409, detail="Ambiguous: multiple subcontests match")
+        raise HTTPException(
+            status_code=409, detail="Ambiguous: multiple subcontests match"
+        )
 
     subcontest_id = candidates[0]
     payload = get_results_payload(subcontest_id=subcontest_id, session=session)

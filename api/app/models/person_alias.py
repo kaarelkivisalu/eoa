@@ -10,7 +10,9 @@ from app.db.base import Base
 class PersonAlias(Base):
     __tablename__ = "person_alias"
     __table_args__ = (
-        ForeignKeyConstraint(["person_id"], ["person.id"], name="fk_person_alias_person"),
+        ForeignKeyConstraint(
+            ["person_id"], ["person.id"], name="fk_person_alias_person"
+        ),
         Index("fk_person_alias_person_idx", "person_id"),
         Index("name_UNIQUE", "name_template", unique=True),
     )

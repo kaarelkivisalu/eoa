@@ -50,7 +50,9 @@ def search_schools(
 
 
 def _get_school_or_404(*, school_id: int, session: Session) -> School:
-    school = session.execute(select(School).where(School.id == school_id)).scalar_one_or_none()
+    school = session.execute(
+        select(School).where(School.id == school_id)
+    ).scalar_one_or_none()
     if school is None:
         raise HTTPException(status_code=404, detail="School not found")
     return school
@@ -80,16 +82,16 @@ def school_students(
 
     return SchoolParticipantsResponse.model_validate(
         {
-        "school_id": school.id,
-        "school_name": school.name,
-        "students": [
-            {
-                "person_id": r.person_id,
-                "person_name": r.person_name,
-                "participations": int(r.participations),
-            }
-            for r in rows
-        ],
+            "school_id": school.id,
+            "school_name": school.name,
+            "students": [
+                {
+                    "person_id": r.person_id,
+                    "person_name": r.person_name,
+                    "participations": int(r.participations),
+                }
+                for r in rows
+            ],
         }
     )
 
@@ -124,15 +126,15 @@ def school_mentors(
 
     return SchoolParticipantsResponse.model_validate(
         {
-        "school_id": school.id,
-        "school_name": school.name,
-        "mentors": [
-            {
-                "person_id": r.mentor_id,
-                "person_name": r.mentor_name,
-                "participations": int(r.participations),
-            }
-            for r in rows
-        ],
+            "school_id": school.id,
+            "school_name": school.name,
+            "mentors": [
+                {
+                    "person_id": r.mentor_id,
+                    "person_name": r.mentor_name,
+                    "participations": int(r.participations),
+                }
+                for r in rows
+            ],
         }
     )

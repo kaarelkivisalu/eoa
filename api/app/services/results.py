@@ -10,7 +10,14 @@ from fastapi.responses import Response
 from sqlalchemy import select
 from sqlalchemy.orm import Session, joinedload
 
-from app.models import Contest, Contestant, ContestantField, Person, Subcontest, SubcontestColumn
+from app.models import (
+    Contest,
+    Contestant,
+    ContestantField,
+    Person,
+    Subcontest,
+    SubcontestColumn,
+)
 
 
 class ResultsFormat(str, Enum):
@@ -64,27 +71,39 @@ def get_results_payload(*, subcontest_id: int, session: Session) -> dict[str, An
                 joinedload(Contestant.school),
                 joinedload(Contestant.mentor),
             )
-            .order_by(Contestant.placement.is_(None), Contestant.placement, Contestant.id)
+            .order_by(
+                Contestant.placement.is_(None), Contestant.placement, Contestant.id
+            )
         )
         .unique()
         .scalars()
         .all()
     )
 
-    entries_by_task_and_contestant: dict[int, dict[int, str]] = {tid: {} for tid in task_ids}
+    entries_by_task_and_contestant: dict[int, dict[int, str]] = {
+        tid: {} for tid in task_ids
+    }
     if task_ids:
         rows = session.execute(
-            select(ContestantField.task_id, ContestantField.contestant_id, ContestantField.entry).where(
-                ContestantField.task_id.in_(task_ids)
-            )
+            select(
+                ContestantField.task_id,
+                ContestantField.contestant_id,
+                ContestantField.entry,
+            ).where(ContestantField.task_id.in_(task_ids))
         ).all()
         for task_id, contestant_id, entry in rows:
-            entries_by_task_and_contestant.setdefault(task_id, {})[contestant_id] = entry
+            entries_by_task_and_contestant.setdefault(task_id, {})[contestant_id] = (
+                entry
+            )
 
     contest_name = contest_display_name(subcontest)
     title = ""
     contest = subcontest.contest
-    if contest.subject is not None and contest.type is not None and contest.year is not None:
+    if (
+        contest.subject is not None
+        and contest.type is not None
+        and contest.year is not None
+    ):
         title = (
             f"{contest.subject.name} {contest.type.name.lower()} "
             f"{contest.year}/{contest.year + 1} - {subcontest.age_group.name}"
@@ -164,7 +183,9 @@ def payload_as_csv(*, subcontest_id: int, payload: dict[str, Any]) -> Response:
         if has_school:
             out_row.append(str(row.get("school") or ""))
         if has_mentor:
-            mentors = [m for m in (row.get("mentors") or []) if isinstance(m, str) and m]
+            mentors = [
+                m for m in (row.get("mentors") or []) if isinstance(m, str) and m
+            ]
             out_row.append(" / ".join(mentors))
 
         fields = row.get("fields") or []

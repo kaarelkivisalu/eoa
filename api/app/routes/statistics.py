@@ -47,15 +47,15 @@ def student_statistics(
     place_value = _weight_expr() if weighted else 1
 
     total_participations = func.count().label("total_participations")
-    first_places = func.sum(case((Contestant.placement == 1, place_value), else_=0)).label(
-        "first_places"
-    )
+    first_places = func.sum(
+        case((Contestant.placement == 1, place_value), else_=0)
+    ).label("first_places")
     second_places = func.sum(
         case((Contestant.placement == 2, place_value), else_=0)
     ).label("second_places")
-    third_places = func.sum(case((Contestant.placement == 3, place_value), else_=0)).label(
-        "third_places"
-    )
+    third_places = func.sum(
+        case((Contestant.placement == 3, place_value), else_=0)
+    ).label("third_places")
 
     rows = session.execute(
         select(
@@ -119,5 +119,7 @@ def student_statistics(
     return Response(
         content=buf.getvalue(),
         media_type="text/csv; charset=utf-8",
-        headers={"Content-Disposition": f'attachment; filename="student_statistics{suffix}.csv"'},
+        headers={
+            "Content-Disposition": f'attachment; filename="student_statistics{suffix}.csv"'
+        },
     )

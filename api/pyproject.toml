@@ -15,5 +15,7 @@ dependencies = [
 
 [dependency-groups]
 dev = [
+    "ruff",
     "sqlacodegen>=3.2.0",
+    "ty",
 ]
