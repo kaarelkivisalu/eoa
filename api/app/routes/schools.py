@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from fastapi import APIRouter, Depends, HTTPException, Path, Query
+from fastapi import APIRouter, Depends, HTTPException, Path, Query, Response
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
@@ -22,6 +22,7 @@ def search_schools(
     *,
     q: str = Query(..., min_length=1, description="Substring search in school name."),
     limit: int = Query(20, ge=1, le=200),
+    response: Response,
     session: Session = Depends(get_session),
 ) -> list[dict[str, Any]]:
     query = q.strip()
@@ -32,9 +33,15 @@ def search_schools(
         select(School.id, School.name)
         .where(School.name.like(f"%{query}%"))
         .order_by(School.name)
-        .limit(limit)
+        .limit(limit + 1)
     ).all()
-    return [{"school_id": r.id, "school_name": r.name} for r in rows]
+
+    has_more = len(rows) > limit
+    response.headers["X-Result-Limit"] = str(limit)
+    response.headers["X-Result-Has-More"] = "true" if has_more else "false"
+    response.headers["X-Result-Count"] = str(min(len(rows), limit))
+
+    return [{"school_id": r.id, "school_name": r.name} for r in rows[:limit]]
 
 
 def _get_school_or_404(*, school_id: int, session: Session) -> School:
