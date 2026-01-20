@@ -82,44 +82,33 @@ def student_statistics(
         )
     ).all()
 
-    payload = [
-        {
-            "person_id": r.person_id,
-            "person_name": r.person_name,
-            "total_participations": int(r.total_participations),
-            "first_places": int(r.first_places or 0),
-            "second_places": int(r.second_places or 0),
-            "third_places": int(r.third_places or 0),
-        }
+    fields = [
+        "person_id",
+        "person_name",
+        "total_participations",
+        "first_places",
+        "second_places",
+        "third_places",
+    ]
+    payload_rows = [
+        [
+            r.person_id,
+            r.person_name,
+            int(r.total_participations),
+            int(r.first_places or 0),
+            int(r.second_places or 0),
+            int(r.third_places or 0),
+        ]
         for r in rows
     ]
 
     if format == StatisticsFormat.json:
-        return payload
+        return {"fields": fields, "rows": payload_rows}
 
     buf = io.StringIO()
     writer = csv.writer(buf)
-    writer.writerow(
-        [
-            "person_id",
-            "person_name",
-            "total_participations",
-            "first_places",
-            "second_places",
-            "third_places",
-        ]
-    )
-    for row in payload:
-        writer.writerow(
-            [
-                row["person_id"],
-                row["person_name"],
-                row["total_participations"],
-                row["first_places"],
-                row["second_places"],
-                row["third_places"],
-            ]
-        )
+    writer.writerow(fields)
+    writer.writerows(payload_rows)
 
     suffix = "_weighted" if weighted else ""
     return Response(
