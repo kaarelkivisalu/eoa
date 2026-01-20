@@ -6,7 +6,16 @@ from sqlalchemy.orm import Session
 
 from app.db import get_session
 from app.domain.subjects import SUBJECT_ABBREV
-from app.models import AgeGroup, Contest, Contestant, Person, Subject, Subcontest, Type, t_mentor
+from app.models import (
+    AgeGroup,
+    Contest,
+    Contestant,
+    Person,
+    Subject,
+    Subcontest,
+    Type,
+    t_mentor,
+)
 from app.schemas import ContestantEntry, MentorEntry, PersonSummary
 
 router = APIRouter(tags=["people"])
@@ -121,7 +130,9 @@ def contestant(
 @router.get("/mentor/{person_id}", response_model=list[MentorEntry])
 def mentor(
     *,
-    person_id: int = Path(..., gt=0, description="Mentor person ID (must be publishable)."),
+    person_id: int = Path(
+        ..., gt=0, description="Mentor person ID (must be publishable)."
+    ),
     session: Session = Depends(get_session),
 ) -> list[MentorEntry]:
     mentor_row = session.execute(

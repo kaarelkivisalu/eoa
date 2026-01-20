@@ -1,2 +1,1 @@
 """Domain helpers and constants."""
-

@@ -12,7 +12,9 @@ from app.db.base import Base
 class Subcontest(Base):
     __tablename__ = "subcontest"
     __table_args__ = (
-        ForeignKeyConstraint(["age_group_id"], ["age_group.id"], name="fk_subcontest_age_group"),
+        ForeignKeyConstraint(
+            ["age_group_id"], ["age_group.id"], name="fk_subcontest_age_group"
+        ),
         ForeignKeyConstraint(
             ["contest_id"],
             ["contest.id"],
@@ -35,7 +37,9 @@ class Subcontest(Base):
     solutions_link: Mapped[Optional[str]] = mapped_column(String(128))
     description: Mapped[Optional[str]] = mapped_column(String(1024))
 
-    age_group: Mapped["AgeGroup"] = relationship("AgeGroup", back_populates="subcontest")
+    age_group: Mapped["AgeGroup"] = relationship(
+        "AgeGroup", back_populates="subcontest"
+    )
     contest: Mapped["Contest"] = relationship("Contest", back_populates="subcontest")
     contestant: Mapped[list["Contestant"]] = relationship(
         "Contestant", back_populates="subcontest"

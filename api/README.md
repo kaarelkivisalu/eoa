@@ -1,5 +1,14 @@
 ## Endpoints
 
+## Dev
+
+```bash
+cd api
+uv run ruff format .
+uv run ruff check .
+uv run ty check .
+```
+
 ### Subcontest tree (each endpoint goes one level deeper)
 
 - `GET /contest` → subjects (abbrev + full name)
