@@ -1,6 +1,10 @@
 from __future__ import annotations
 
-from typing import Optional
+from typing import TYPE_CHECKING, Optional
+
+if TYPE_CHECKING:
+    from app.models.contestant import Contestant
+    from app.models.subcontest import Subcontest
 
 from sqlalchemy import String
 from sqlalchemy.dialects.mysql import INTEGER
@@ -17,9 +21,9 @@ class AgeGroup(Base):
     min_class: Mapped[Optional[int]] = mapped_column(INTEGER(11))
     max_class: Mapped[Optional[int]] = mapped_column(INTEGER(11))
 
-    subcontest: Mapped[list["Subcontest"]] = relationship(
+    subcontest: Mapped[list[Subcontest]] = relationship(
         "Subcontest", back_populates="age_group"
     )
-    contestant: Mapped[list["Contestant"]] = relationship(
+    contestant: Mapped[list[Contestant]] = relationship(
         "Contestant", back_populates="age_group"
     )

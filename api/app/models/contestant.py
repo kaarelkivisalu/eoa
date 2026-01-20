@@ -1,6 +1,13 @@
 from __future__ import annotations
 
-from typing import Optional
+from typing import TYPE_CHECKING, Optional
+
+if TYPE_CHECKING:
+    from app.models.age_group import AgeGroup
+    from app.models.contestant_field import ContestantField
+    from app.models.person import Person
+    from app.models.school import School
+    from app.models.subcontest import Subcontest
 
 from sqlalchemy import ForeignKeyConstraint, Index
 from sqlalchemy.dialects.mysql import INTEGER
@@ -41,21 +48,21 @@ class Contestant(Base):
     school_id: Mapped[Optional[int]] = mapped_column(INTEGER(11))
     placement: Mapped[Optional[int]] = mapped_column(INTEGER(11))
 
-    age_group: Mapped[Optional["AgeGroup"]] = relationship(
+    age_group: Mapped[Optional[AgeGroup]] = relationship(
         "AgeGroup", back_populates="contestant"
     )
-    person: Mapped[Optional["Person"]] = relationship(
+    person: Mapped[Optional[Person]] = relationship(
         "Person", back_populates="contestant"
     )
-    school: Mapped[Optional["School"]] = relationship(
+    school: Mapped[Optional[School]] = relationship(
         "School", back_populates="contestant"
     )
-    subcontest: Mapped["Subcontest"] = relationship(
+    subcontest: Mapped[Subcontest] = relationship(
         "Subcontest", back_populates="contestant"
     )
-    mentor: Mapped[list["Person"]] = relationship(
+    mentor: Mapped[list[Person]] = relationship(
         "Person", secondary="mentor", back_populates="contestant_"
     )
-    contestant_field: Mapped[list["ContestantField"]] = relationship(
+    contestant_field: Mapped[list[ContestantField]] = relationship(
         "ContestantField", back_populates="contestant"
     )

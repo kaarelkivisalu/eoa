@@ -1,7 +1,13 @@
 from __future__ import annotations
 
 import datetime
-from typing import Optional
+from typing import TYPE_CHECKING, Optional
+
+if TYPE_CHECKING:
+    from app.models.subcontest import Subcontest
+    from app.models.subject import Subject
+    from app.models.type import Type
+    from app.models.year import Year
 
 from sqlalchemy import Date, ForeignKeyConstraint, Index, String
 from sqlalchemy.dialects.mysql import INTEGER
@@ -31,9 +37,9 @@ class Contest(Base):
     end_date: Mapped[Optional[datetime.date]] = mapped_column(Date)
     year: Mapped[Optional[int]] = mapped_column(INTEGER(11))
 
-    subject: Mapped["Subject"] = relationship("Subject", back_populates="contest")
-    type: Mapped["Type"] = relationship("Type", back_populates="contest")
-    year_: Mapped[Optional["Year"]] = relationship("Year", back_populates="contest")
-    subcontest: Mapped[list["Subcontest"]] = relationship(
+    subject: Mapped[Subject] = relationship("Subject", back_populates="contest")
+    type: Mapped[Type] = relationship("Type", back_populates="contest")
+    year_: Mapped[Optional[Year]] = relationship("Year", back_populates="contest")
+    subcontest: Mapped[list[Subcontest]] = relationship(
         "Subcontest", back_populates="contest"
     )
