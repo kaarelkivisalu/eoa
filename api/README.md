@@ -19,10 +19,4 @@ curl 'http://localhost:8000/subcontest/efo/2023-2024/lahtine/12.%20klass' | jq
 curl -L 'http://localhost:8000/subcontest/efo/2023-2024/lahtine/12.%20klass?format=csv'
 ```
 
-### Subjects (with 3-letter abbreviations)
-
-- `GET /subjects`
-
-```bash
-curl 'http://localhost:8000/subjects' | jq
-```
+`/subjects` was removed; use `GET /subcontest` for the subject list (abbrev + full name).
