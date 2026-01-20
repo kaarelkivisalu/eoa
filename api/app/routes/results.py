@@ -98,10 +98,6 @@ def _get_subcontest_results(
             f"{contest.year}/{contest.year + 1} - {subcontest.age_group.name}"
         )
 
-    has_age_group = any(c.age_group is not None for c in contestants)
-    has_school = any(c.school is not None for c in contestants)
-    has_mentor = any(len(c.mentor) > 0 for c in contestants)
-
     def maybe_name(value: Any) -> str | None:
         if value is None:
             return None
@@ -111,32 +107,26 @@ def _get_subcontest_results(
     return {
         "title": title,
         "contest_name": contest_name,
-        "meta": {
-            "has_age_group": has_age_group,
-            "has_school": has_school,
-            "has_mentor": has_mentor,
-        },
-        "subcontest": {
-            "name": subcontest.name,
-            "tasks_link": subcontest.tasks_link,
-            "solutions_link": subcontest.solutions_link,
-            "description": subcontest.description,
-            "age_group": {"name": subcontest.age_group.name},
-            "contest": {
-                "name": contest.name,
-                "year": contest.year,
-                "subject": {"name": maybe_name(contest.subject)},
-                "type": {"name": maybe_name(contest.type)},
-            },
-        },
-        "columns": [{"name": c.name} for c in columns],
+        "subcontest": subcontest.name,
+        "age_group": subcontest.age_group.name,
+        "contest": contest.name,
+        "year": contest.year,
+        "subject": maybe_name(contest.subject),
+        "type": maybe_name(contest.type),
+        "columns": [c.name for c in columns],
         "rows": [
             {
                 "placement": c.placement,
                 "person_name": maybe_name(c.person),
                 "age_group": maybe_name(c.age_group),
                 "school": maybe_name(c.school),
-                "mentors": [maybe_name(m) for m in sorted(c.mentor, key=lambda p: p.name)],
+                "mentors": [
+                    name
+                    for name in (
+                        maybe_name(m) for m in sorted(c.mentor, key=lambda p: p.name)
+                    )
+                    if name is not None
+                ],
                 "fields": [entries_by_task_and_contestant.get(col.id, {}).get(c.id, "") for col in columns],
             }
             for c in contestants
