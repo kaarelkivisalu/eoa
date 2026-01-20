@@ -200,8 +200,8 @@ def get_results(
     return payload_as_csv(subcontest_id=subcontest_id, payload=payload)
 
 
-@router.get("/contest/by-subcontest-id/{subcontest_id}")
-def get_results_by_subcontest_id(
+@router.get("/subcontests/{subcontest_id}")
+def get_subcontest_by_id(
     *,
     subcontest_id: int = Path(..., gt=0, description="Subcontest ID"),
     format: ResultsFormat = Query(ResultsFormat.json),
