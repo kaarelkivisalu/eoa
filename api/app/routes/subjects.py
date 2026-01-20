@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -38,15 +38,9 @@ SUBJECT_ABBREV: dict[str, str] = {
 @router.get("/subjects")
 def list_subjects(
     *,
-    q: str | None = Query(
-        None,
-        description="Optional filter (case-insensitive) by subject name or abbreviation.",
-    ),
     session: Session = Depends(get_session),
 ) -> list[dict[str, str]]:
     subjects = session.execute(select(Subject).order_by(Subject.name)).scalars().all()
-
-    q_norm = (q or "").strip().lower()
     out: list[dict[str, str]] = []
 
     missing: list[str] = []
@@ -56,10 +50,6 @@ def list_subjects(
         if abbrev is None:
             missing.append(name)
             continue
-
-        if q_norm:
-            if q_norm not in name.lower() and q_norm not in abbrev.lower():
-                continue
 
         out.append({"abbrev": abbrev, "name": name})
 

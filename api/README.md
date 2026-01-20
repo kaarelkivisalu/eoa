@@ -29,7 +29,6 @@ curl 'http://localhost:8000/subcontest-ids' | jq
 ### Subjects (with 3-letter abbreviations)
 
 - `GET /subjects`
-- `GET /subjects?q=mat` (optional filter by name/abbrev)
 
 ```bash
 curl 'http://localhost:8000/subjects' | jq
