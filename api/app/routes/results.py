@@ -1,8 +1,11 @@
 from __future__ import annotations
 
+import csv
+import io
 from typing import Any
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi.responses import Response
 from sqlalchemy import select
 from sqlalchemy.orm import Session, joinedload
 
@@ -25,12 +28,16 @@ def _contest_display_name(subcontest: Subcontest) -> str:
 def get_subcontest_results(
     *,
     subcontest_id: int,
+    format: str = Query("json", pattern="^(json|csv)$"),
     session: Session = Depends(get_session),
 ):
-    return _get_subcontest_results(
+    payload = _get_subcontest_results(
         subcontest_id=subcontest_id,
         session=session,
     )
+    if format == "json":
+        return payload
+    return _as_csv(subcontest_id=subcontest_id, payload=payload)
 
 
 def _get_subcontest_results(
@@ -132,3 +139,50 @@ def _get_subcontest_results(
             for c in contestants
         ],
     }
+
+
+def _as_csv(*, subcontest_id: int, payload: dict[str, Any]) -> Response:
+    columns: list[str] = payload.get("columns") or []
+    rows: list[dict[str, Any]] = payload.get("rows") or []
+
+    has_age_group = any((r.get("age_group") or "") != "" for r in rows)
+    has_school = any((r.get("school") or "") != "" for r in rows)
+    has_mentor = any(len(r.get("mentors") or []) > 0 for r in rows)
+
+    headers: list[str] = ["Koht", "Nimi"]
+    if has_age_group:
+        headers.append("Klass")
+    if has_school:
+        headers.append("Kool")
+    if has_mentor:
+        headers.append("Juhendaja")
+    headers.extend(columns)
+
+    buf = io.StringIO()
+    writer = csv.writer(buf)
+    writer.writerow(headers)
+
+    for row in rows:
+        out_row: list[str] = [
+            "" if row.get("placement") is None else str(row.get("placement")),
+            str(row.get("person_name") or ""),
+        ]
+        if has_age_group:
+            out_row.append(str(row.get("age_group") or ""))
+        if has_school:
+            out_row.append(str(row.get("school") or ""))
+        if has_mentor:
+            mentors = [m for m in (row.get("mentors") or []) if isinstance(m, str) and m]
+            out_row.append(" / ".join(mentors))
+
+        fields = row.get("fields") or []
+        out_row.extend(str(v or "") for v in fields[: len(columns)])
+        out_row.extend("" for _ in range(len(columns) - len(fields)))
+
+        writer.writerow(out_row)
+
+    return Response(
+        content=buf.getvalue(),
+        media_type="text/csv; charset=utf-8",
+        headers={"Content-Disposition": f'attachment; filename="subcontest_{subcontest_id}_results.csv"'},
+    )

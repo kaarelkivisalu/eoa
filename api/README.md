@@ -12,6 +12,12 @@ Examples:
 curl 'http://localhost:8000/subcontests/1/results' | jq
 ```
 
+CSV export:
+
+```bash
+curl -L 'http://localhost:8000/subcontests/1/results?format=csv'
+```
+
 ### List valid `subcontest_id` values (with metadata)
 
 - `GET /subcontest-ids`
