@@ -12,7 +12,7 @@ from app.domain.subjects import SUBJECT_ABBREV, SUBJECT_BY_ABBREV, SubjectAbbrev
 from app.models import AgeGroup, Contest, Subcontest, Subject, Type
 from app.services.results import ResultsFormat, get_results_payload, payload_as_csv
 
-router = APIRouter(tags=["subcontest"])
+router = APIRouter(tags=["contest"])
 
 
 def _parse_season_start_year(season: str) -> int:
@@ -27,7 +27,7 @@ def _parse_season_start_year(season: str) -> int:
     return y1
 
 
-@router.get("/subcontest")
+@router.get("/contest")
 def list_subjects(*, session: Session = Depends(get_session)) -> list[dict[str, str]]:
     subject_names = (
         session.execute(
@@ -50,15 +50,15 @@ def list_subjects(*, session: Session = Depends(get_session)) -> list[dict[str, 
     return [{"subject_abbrev": SUBJECT_ABBREV[name], "subject": name} for name in subject_names]
 
 
-@router.get("/subcontest/{subject_abbrev}")
+@router.get("/contest/{subject}")
 def list_seasons(
     *,
-    subject_abbrev: SubjectAbbrev,
+    subject: SubjectAbbrev,
     session: Session = Depends(get_session),
 ) -> list[str]:
-    subject_name = SUBJECT_BY_ABBREV.get(subject_abbrev.value)
+    subject_name = SUBJECT_BY_ABBREV.get(subject.value)
     if subject_name is None:
-        raise HTTPException(status_code=400, detail="Invalid subject_abbrev")
+        raise HTTPException(status_code=400, detail="Invalid subject")
 
     years = (
         session.execute(
@@ -75,10 +75,10 @@ def list_seasons(
     return [f"{y}-{y + 1}" for y in years]
 
 
-@router.get("/subcontest/{subject_abbrev}/{season}")
+@router.get("/contest/{subject}/{season}")
 def list_contest_types(
     *,
-    subject_abbrev: SubjectAbbrev,
+    subject: SubjectAbbrev,
     season: str = Path(
         ...,
         description="School-year season in format YYYY-YYYY (end year must be start year + 1).",
@@ -87,9 +87,9 @@ def list_contest_types(
     ),
     session: Session = Depends(get_session),
 ) -> list[str]:
-    subject_name = SUBJECT_BY_ABBREV.get(subject_abbrev.value)
+    subject_name = SUBJECT_BY_ABBREV.get(subject.value)
     if subject_name is None:
-        raise HTTPException(status_code=400, detail="Invalid subject_abbrev")
+        raise HTTPException(status_code=400, detail="Invalid subject")
 
     year = _parse_season_start_year(season)
 
@@ -109,25 +109,25 @@ def list_contest_types(
     return [t.lower() for t in types if t is not None]
 
 
-@router.get("/subcontest/{subject_abbrev}/{season}/{contest_type}")
+@router.get("/contest/{subject}/{season}/{type}")
 def list_age_groups(
     *,
-    subject_abbrev: SubjectAbbrev,
+    subject: SubjectAbbrev,
     season: str = Path(
         ...,
         description="School-year season in format YYYY-YYYY (end year must be start year + 1).",
         pattern=r"^\d{4}[-_]\d{4}$",
         examples=["2017-2018"],
     ),
-    contest_type: str,
+    type: str,
     session: Session = Depends(get_session),
 ) -> list[str]:
-    subject_name = SUBJECT_BY_ABBREV.get(subject_abbrev.value)
+    subject_name = SUBJECT_BY_ABBREV.get(subject.value)
     if subject_name is None:
-        raise HTTPException(status_code=400, detail="Invalid subject_abbrev")
+        raise HTTPException(status_code=400, detail="Invalid subject")
 
     year = _parse_season_start_year(season)
-    contest_type_norm = contest_type.strip().lower()
+    contest_type_norm = type.strip().lower()
 
     age_groups = (
         session.execute(
@@ -148,27 +148,27 @@ def list_age_groups(
     return [a for a in age_groups if a is not None]
 
 
-@router.get("/subcontest/{subject_abbrev}/{season}/{contest_type}/{age_group}")
+@router.get("/contest/{subject}/{season}/{type}/{age_group}")
 def get_results(
     *,
-    subject_abbrev: SubjectAbbrev,
+    subject: SubjectAbbrev,
     season: str = Path(
         ...,
         description="School-year season in format YYYY-YYYY (end year must be start year + 1).",
         pattern=r"^\d{4}[-_]\d{4}$",
         examples=["2017-2018"],
     ),
-    contest_type: str,
+    type: str,
     age_group: str,
     format: ResultsFormat = Query(ResultsFormat.json),
     session: Session = Depends(get_session),
 ):
-    subject_name = SUBJECT_BY_ABBREV.get(subject_abbrev.value)
+    subject_name = SUBJECT_BY_ABBREV.get(subject.value)
     if subject_name is None:
-        raise HTTPException(status_code=400, detail="Invalid subject_abbrev")
+        raise HTTPException(status_code=400, detail="Invalid subject")
 
     year = _parse_season_start_year(season)
-    contest_type_norm = contest_type.strip().lower()
+    contest_type_norm = type.strip().lower()
     age_group_norm = age_group.strip().lower()
 
     candidates = (

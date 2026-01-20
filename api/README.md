@@ -2,21 +2,21 @@
 
 ### Subcontest tree (each endpoint goes one level deeper)
 
-- `GET /subcontest` → subjects (abbrev + full name)
-- `GET /subcontest/{subject_abbrev}` → seasons (format `YYYY-YYYY`)
-- `GET /subcontest/{subject_abbrev}/{season}` → contest types
-- `GET /subcontest/{subject_abbrev}/{season}/{contest_type}` → age groups
-- `GET /subcontest/{subject_abbrev}/{season}/{contest_type}/{age_group}` → results (`format=json|csv`)
+- `GET /contest` → subjects (abbrev + full name)
+- `GET /contest/{subject}` → seasons (format `YYYY-YYYY`)
+- `GET /contest/{subject}/{season}` → contest types
+- `GET /contest/{subject}/{season}/{type}` → age groups
+- `GET /contest/{subject}/{season}/{type}/{age_group}` → results (`format=json|csv`)
 
 Examples:
 
 ```bash
-curl 'http://localhost:8000/subcontest' | jq
-curl 'http://localhost:8000/subcontest/efo' | jq
-curl 'http://localhost:8000/subcontest/efo/2023-2024' | jq
-curl 'http://localhost:8000/subcontest/efo/2023-2024/lahtine' | jq
-curl 'http://localhost:8000/subcontest/efo/2023-2024/lahtine/12.%20klass' | jq
-curl -L 'http://localhost:8000/subcontest/efo/2023-2024/lahtine/12.%20klass?format=csv'
+curl 'http://localhost:8000/contest' | jq
+curl 'http://localhost:8000/contest/efo' | jq
+curl 'http://localhost:8000/contest/efo/2023-2024' | jq
+curl 'http://localhost:8000/contest/efo/2023-2024/lahtine' | jq
+curl 'http://localhost:8000/contest/efo/2023-2024/lahtine/12.%20klass' | jq
+curl -L 'http://localhost:8000/contest/efo/2023-2024/lahtine/12.%20klass?format=csv'
 ```
 
-`/subjects` was removed; use `GET /subcontest` for the subject list (abbrev + full name).
+`/subjects` was removed; use `GET /contest` for the subject list (abbrev + full name).
