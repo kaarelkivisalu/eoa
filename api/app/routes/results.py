@@ -1,8 +1,8 @@
 from __future__ import annotations
 
-from typing import Literal
+from typing import Any
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import select
 from sqlalchemy.orm import Session, joinedload
 
@@ -19,18 +19,6 @@ def _contest_display_name(subcontest: Subcontest) -> str:
     if year is not None and str(year) not in contest_name:
         contest_name = f"{contest_name} ({year}/{year + 1})".strip()
     return contest_name
-
-
-@router.get("/results")
-def get_results_by_query(
-    *,
-    id: int = Query(..., gt=0, description="Subcontest ID (matches https://eoa.ee/?id=...)"),
-    session: Session = Depends(get_session),
-):
-    return _get_subcontest_results(
-        subcontest_id=id,
-        session=session,
-    )
 
 
 @router.get("/subcontests/{subcontest_id}/results")
@@ -111,8 +99,14 @@ def _get_subcontest_results(
         )
 
     has_age_group = any(c.age_group is not None for c in contestants)
-    has_school = any(c.school_id is not None for c in contestants)
+    has_school = any(c.school is not None for c in contestants)
     has_mentor = any(len(c.mentor) > 0 for c in contestants)
+
+    def maybe_name(value: Any) -> str | None:
+        if value is None:
+            return None
+        name = getattr(value, "name", None)
+        return name if isinstance(name, str) else None
 
     return {
         "title": title,
@@ -123,38 +117,27 @@ def _get_subcontest_results(
             "has_mentor": has_mentor,
         },
         "subcontest": {
-            "id": subcontest.id,
             "name": subcontest.name,
             "tasks_link": subcontest.tasks_link,
             "solutions_link": subcontest.solutions_link,
             "description": subcontest.description,
-            "age_group": {"id": subcontest.age_group.id, "name": subcontest.age_group.name},
+            "age_group": {"name": subcontest.age_group.name},
             "contest": {
-                "id": contest.id,
                 "name": contest.name,
                 "year": contest.year,
-                "subject": {"id": contest.subject.id, "name": contest.subject.name}
-                if contest.subject is not None
-                else None,
-                "type": {"id": contest.type.id, "name": contest.type.name}
-                if contest.type is not None
-                else None,
+                "subject": {"name": maybe_name(contest.subject)},
+                "type": {"name": maybe_name(contest.type)},
             },
         },
-        "columns": [{"id": c.id, "name": c.name} for c in columns],
+        "columns": [{"name": c.name} for c in columns],
         "rows": [
             {
-                "contestant_id": c.id,
                 "placement": c.placement,
-                "person": {"id": c.person_id, "name": c.person.name if c.person else None},
-                "age_group": {"id": c.age_group_id, "name": c.age_group.name if c.age_group else None},
-                "school": {"id": c.school_id, "name": c.school.name if c.school else None},
-                "mentors": [{"id": m.id, "name": m.name} for m in sorted(c.mentor, key=lambda p: p.id)],
+                "person_name": maybe_name(c.person),
+                "age_group": maybe_name(c.age_group),
+                "school": maybe_name(c.school),
+                "mentors": [maybe_name(m) for m in sorted(c.mentor, key=lambda p: p.name)],
                 "fields": [entries_by_task_and_contestant.get(col.id, {}).get(c.id, "") for col in columns],
-                "fields_by_column_id": {
-                    str(col.id): entries_by_task_and_contestant.get(col.id, {}).get(c.id, "")
-                    for col in columns
-                },
             }
             for c in contestants
         ],
