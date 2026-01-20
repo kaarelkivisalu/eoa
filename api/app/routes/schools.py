@@ -12,8 +12,8 @@ from app.models import Contestant, Person, School, t_mentor
 router = APIRouter(tags=["schools"])
 
 
-@router.get("/school-ids")
-def list_school_ids(*, session: Session = Depends(get_session)) -> list[dict[str, Any]]:
+@router.get("/schools")
+def list_schools(*, session: Session = Depends(get_session)) -> list[dict[str, Any]]:
     rows = session.execute(select(School.id, School.name).order_by(School.id)).all()
     return [{"school_id": r.id, "school_name": r.name} for r in rows]
 
