@@ -31,11 +31,12 @@ def contestant(
     person_id: int = Path(..., gt=0, description="Person ID (must be publishable)."),
     session: Session = Depends(get_session),
 ) -> list[dict[str, Any]]:
-    publishable = session.execute(
-        select(Person.publishable).where(Person.id == person_id)
-    ).scalar_one_or_none()
-    if publishable is None or publishable != 1:
+    person_row = session.execute(
+        select(Person.name, Person.publishable).where(Person.id == person_id)
+    ).one_or_none()
+    if person_row is None or person_row.publishable != 1:
         raise HTTPException(status_code=404, detail="Not found")
+    person_name: str = person_row.name
 
     rows = session.execute(
         select(
@@ -66,6 +67,7 @@ def contestant(
             missing.add(r.subject_name)
         out.append(
             {
+                "person_name": person_name,
                 "subject": subj_abbrev,
                 "type": (r.type_name or "").lower() if r.type_name else None,
                 "season": _season(r.year),
@@ -90,11 +92,12 @@ def mentor(
     mentor_id: int = Path(..., gt=0, description="Mentor person ID (must be publishable)."),
     session: Session = Depends(get_session),
 ) -> list[dict[str, Any]]:
-    mentor_publishable = session.execute(
-        select(Person.publishable).where(Person.id == mentor_id)
-    ).scalar_one_or_none()
-    if mentor_publishable is None or mentor_publishable != 1:
+    mentor_row = session.execute(
+        select(Person.name, Person.publishable).where(Person.id == mentor_id)
+    ).one_or_none()
+    if mentor_row is None or mentor_row.publishable != 1:
         raise HTTPException(status_code=404, detail="Not found")
+    mentor_name: str = mentor_row.name
 
     # Only include students that are publishable too.
     student = Person.__table__.alias("student")
@@ -130,6 +133,7 @@ def mentor(
             missing.add(r.subject_name)
         out.append(
             {
+                "mentor_name": mentor_name,
                 "student_name": r.student_name,
                 "subject": subj_abbrev,
                 "type": (r.type_name or "").lower() if r.type_name else None,
