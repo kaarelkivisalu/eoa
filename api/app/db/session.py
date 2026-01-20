@@ -16,3 +16,4 @@ SessionLocal = sessionmaker(bind=engine, autocommit=False, autoflush=False)
 def get_session() -> Session:
     with SessionLocal() as session:
         yield session
+
