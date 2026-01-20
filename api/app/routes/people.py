@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from fastapi import APIRouter, Depends, HTTPException, Path
+from fastapi import APIRouter, Depends, HTTPException, Path, Query
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -11,6 +11,27 @@ from app.domain.subjects import SUBJECT_ABBREV
 from app.models import AgeGroup, Contest, Contestant, Person, Subject, Subcontest, Type, t_mentor
 
 router = APIRouter(tags=["people"])
+
+@router.get("/people/search")
+def search_people(
+    *,
+    q: str = Query(..., min_length=1, description="Substring search in person name."),
+    limit: int = Query(20, ge=1, le=200),
+    session: Session = Depends(get_session),
+) -> list[dict[str, Any]]:
+    query = q.strip()
+    if not query:
+        raise HTTPException(status_code=422, detail="Query must not be empty")
+
+    rows = session.execute(
+        select(Person.id, Person.name)
+        .where(Person.publishable == 1)
+        .where(Person.name.like(f"%{query}%"))
+        .order_by(Person.name)
+        .limit(limit)
+    ).all()
+
+    return [{"person_id": r.id, "person_name": r.name} for r in rows]
 
 
 def _season(year: int | None) -> str | None:

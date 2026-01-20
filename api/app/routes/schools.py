@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from fastapi import APIRouter, Depends, HTTPException, Path
+from fastapi import APIRouter, Depends, HTTPException, Path, Query
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
@@ -15,6 +15,25 @@ router = APIRouter(tags=["schools"])
 @router.get("/schools")
 def list_schools(*, session: Session = Depends(get_session)) -> list[dict[str, Any]]:
     rows = session.execute(select(School.id, School.name).order_by(School.id)).all()
+    return [{"school_id": r.id, "school_name": r.name} for r in rows]
+
+@router.get("/schools/search")
+def search_schools(
+    *,
+    q: str = Query(..., min_length=1, description="Substring search in school name."),
+    limit: int = Query(20, ge=1, le=200),
+    session: Session = Depends(get_session),
+) -> list[dict[str, Any]]:
+    query = q.strip()
+    if not query:
+        raise HTTPException(status_code=422, detail="Query must not be empty")
+
+    rows = session.execute(
+        select(School.id, School.name)
+        .where(School.name.like(f"%{query}%"))
+        .order_by(School.name)
+        .limit(limit)
+    ).all()
     return [{"school_id": r.id, "school_name": r.name} for r in rows]
 
 
