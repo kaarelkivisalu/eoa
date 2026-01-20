@@ -70,23 +70,23 @@ def school_mentors(
     school = _get_school_or_404(school_id=school_id, session=session)
 
     student = Person.__table__.alias("student")
-    mentor = Person.__table__.alias("mentor")
+    mentor_person = Person.__table__.alias("mentor_person")
 
     rows = session.execute(
         select(
-            mentor.c.id.label("mentor_id"),
-            mentor.c.name.label("mentor_name"),
+            mentor_person.c.id.label("mentor_id"),
+            mentor_person.c.name.label("mentor_name"),
             func.count().label("participations"),
         )
         .select_from(t_mentor)
         .join(Contestant, t_mentor.c.contestant_id == Contestant.id)
         .join(student, Contestant.person_id == student.c.id)
-        .join(mentor, t_mentor.c.mentor_id == mentor.c.id)
+        .join(mentor_person, t_mentor.c.mentor_id == mentor_person.c.id)
         .where(Contestant.school_id == school_id)
         .where(student.c.publishable == 1)
-        .where(mentor.c.publishable == 1)
-        .group_by(mentor.c.id, mentor.c.name)
-        .order_by(func.count().desc(), mentor.c.name)
+        .where(mentor_person.c.publishable == 1)
+        .group_by(mentor_person.c.id, mentor_person.c.name)
+        .order_by(func.count().desc(), mentor_person.c.name)
     ).all()
 
     return {
