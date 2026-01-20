@@ -30,5 +30,6 @@ curl 'http://localhost:8000/subcontests/1' | jq
 
 ### Schools
 
+- `GET /school-ids`
 - `GET /schools/{school_id}/students` (only includes publishable students)
 - `GET /schools/{school_id}/mentors` (only includes publishable students and mentors)

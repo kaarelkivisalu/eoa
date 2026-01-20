@@ -12,6 +12,11 @@ from app.models import Contestant, Person, School, t_mentor
 router = APIRouter(tags=["schools"])
 
 
+@router.get("/school-ids")
+def list_school_ids(*, session: Session = Depends(get_session)) -> list[int]:
+    return session.execute(select(School.id).order_by(School.id)).scalars().all()
+
+
 def _get_school_or_404(*, school_id: int, session: Session) -> School:
     school = session.execute(select(School).where(School.id == school_id)).scalar_one_or_none()
     if school is None:
@@ -95,4 +100,3 @@ def school_mentors(
             for r in rows
         ],
     }
-
