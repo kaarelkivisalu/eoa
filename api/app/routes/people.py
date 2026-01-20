@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from typing import Any
-
 from fastapi import APIRouter, Depends, HTTPException, Path, Query, Response
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -9,10 +7,12 @@ from sqlalchemy.orm import Session
 from app.db import get_session
 from app.domain.subjects import SUBJECT_ABBREV
 from app.models import AgeGroup, Contest, Contestant, Person, Subject, Subcontest, Type, t_mentor
+from app.schemas import ContestantEntry, MentorEntry, PersonSummary
 
 router = APIRouter(tags=["people"])
 
-@router.get("/people/search")
+
+@router.get("/people/search", response_model=list[PersonSummary])
 def search_people(
     *,
     q: str = Query(..., min_length=1, description="Substring search in person name."),
@@ -20,7 +20,7 @@ def search_people(
     limit: int = Query(20, ge=1, le=200),
     response: Response,
     session: Session = Depends(get_session),
-) -> list[dict[str, Any]]:
+) -> list[PersonSummary]:
     query = q.strip()
     if not query:
         raise HTTPException(status_code=422, detail="Query must not be empty")
@@ -42,7 +42,7 @@ def search_people(
     if has_more:
         response.headers["X-Result-Next-Offset"] = str(offset + limit)
 
-    return [{"person_id": r.id, "person_name": r.name} for r in rows[:limit]]
+    return [PersonSummary(person_id=r.id, person_name=r.name) for r in rows[:limit]]
 
 
 def _season(year: int | None) -> str | None:
@@ -57,12 +57,12 @@ def _subject_abbrev(subject_name: str | None) -> str | None:
     return SUBJECT_ABBREV.get(subject_name)
 
 
-@router.get("/contestant/{person_id}")
+@router.get("/contestant/{person_id}", response_model=list[ContestantEntry])
 def contestant(
     *,
     person_id: int = Path(..., gt=0, description="Person ID (must be publishable)."),
     session: Session = Depends(get_session),
-) -> list[dict[str, Any]]:
+) -> list[ContestantEntry]:
     person_row = session.execute(
         select(Person.name, Person.publishable).where(Person.id == person_id)
     ).one_or_none()
@@ -91,22 +91,22 @@ def contestant(
         .order_by(Contest.year.is_(None), Contest.year.desc(), Type.name, AgeGroup.name)
     ).all()
 
-    out: list[dict[str, Any]] = []
+    out: list[ContestantEntry] = []
     missing: set[str] = set()
     for r in rows:
         subj_abbrev = _subject_abbrev(r.subject_name)
         if r.subject_name is not None and subj_abbrev is None:
             missing.add(r.subject_name)
         out.append(
-            {
-                "person_name": person_name,
-                "subject": subj_abbrev,
-                "type": (r.type_name or "").lower() if r.type_name else None,
-                "season": _season(r.year),
-                "age_group": r.age_group,
-                "placement": r.placement,
-                "subcontest_id": r.subcontest_id,
-            }
+            ContestantEntry(
+                person_name=person_name,
+                subject=subj_abbrev,
+                type=(r.type_name or "").lower() if r.type_name else None,
+                season=_season(r.year),
+                age_group=r.age_group,
+                placement=r.placement,
+                subcontest_id=r.subcontest_id,
+            )
         )
 
     if missing:
@@ -118,12 +118,12 @@ def contestant(
     return out
 
 
-@router.get("/mentor/{person_id}")
+@router.get("/mentor/{person_id}", response_model=list[MentorEntry])
 def mentor(
     *,
     person_id: int = Path(..., gt=0, description="Mentor person ID (must be publishable)."),
     session: Session = Depends(get_session),
-) -> list[dict[str, Any]]:
+) -> list[MentorEntry]:
     mentor_row = session.execute(
         select(Person.name, Person.publishable).where(Person.id == person_id)
     ).one_or_none()
@@ -160,23 +160,23 @@ def mentor(
         .order_by(Contest.year.is_(None), Contest.year.desc(), Type.name, AgeGroup.name)
     ).all()
 
-    out: list[dict[str, Any]] = []
+    out: list[MentorEntry] = []
     missing: set[str] = set()
     for r in rows:
         subj_abbrev = _subject_abbrev(r.subject_name)
         if r.subject_name is not None and subj_abbrev is None:
             missing.add(r.subject_name)
         out.append(
-            {
-                "mentor_name": mentor_name,
-                "student_name": r.student_name,
-                "subject": subj_abbrev,
-                "type": (r.type_name or "").lower() if r.type_name else None,
-                "season": _season(r.year),
-                "age_group": r.age_group,
-                "placement": r.placement,
-                "subcontest_id": r.subcontest_id,
-            }
+            MentorEntry(
+                mentor_name=mentor_name,
+                student_name=r.student_name,
+                subject=subj_abbrev,
+                type=(r.type_name or "").lower() if r.type_name else None,
+                season=_season(r.year),
+                age_group=r.age_group,
+                placement=r.placement,
+                subcontest_id=r.subcontest_id,
+            )
         )
 
     if missing:

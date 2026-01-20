@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import re
-from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException, Path, Query
 from sqlalchemy import func, select
@@ -10,6 +9,7 @@ from sqlalchemy.orm import Session
 from app.db import get_session
 from app.domain.subjects import SUBJECT_ABBREV, SUBJECT_BY_ABBREV, SubjectAbbrev
 from app.models import AgeGroup, Contest, Subcontest, Subject, Type
+from app.schemas import ResultsPayload, SubjectListItem
 from app.services.results import ResultsFormat, get_results_payload, payload_as_csv
 
 router = APIRouter(tags=["contest"])
@@ -27,8 +27,8 @@ def _parse_season_start_year(season: str) -> int:
     return y1
 
 
-@router.get("/contest")
-def list_subjects(*, session: Session = Depends(get_session)) -> list[dict[str, str]]:
+@router.get("/contest", response_model=list[SubjectListItem])
+def list_subjects(*, session: Session = Depends(get_session)) -> list[SubjectListItem]:
     subject_names = (
         session.execute(
             select(Subject.name)
@@ -47,10 +47,10 @@ def list_subjects(*, session: Session = Depends(get_session)) -> list[dict[str, 
             detail=f"Missing hardcoded abbreviations for subjects: {', '.join(sorted(missing))}",
         )
 
-    return [{"subject_abbrev": SUBJECT_ABBREV[name], "subject": name} for name in subject_names]
+    return [SubjectListItem(subject_abbrev=SUBJECT_ABBREV[name], subject=name) for name in subject_names]
 
 
-@router.get("/contest/{subject}")
+@router.get("/contest/{subject}", response_model=list[str])
 def list_seasons(
     *,
     subject: SubjectAbbrev,
@@ -75,7 +75,7 @@ def list_seasons(
     return [f"{y}-{y + 1}" for y in years]
 
 
-@router.get("/contest/{subject}/{season}")
+@router.get("/contest/{subject}/{season}", response_model=list[str])
 def list_contest_types(
     *,
     subject: SubjectAbbrev,
@@ -109,7 +109,7 @@ def list_contest_types(
     return [t.lower() for t in types if t is not None]
 
 
-@router.get("/contest/{subject}/{season}/{type}")
+@router.get("/contest/{subject}/{season}/{type}", response_model=list[str])
 def list_age_groups(
     *,
     subject: SubjectAbbrev,
@@ -148,7 +148,11 @@ def list_age_groups(
     return [a for a in age_groups if a is not None]
 
 
-@router.get("/contest/{subject}/{season}/{type}/{age_group}")
+@router.get(
+    "/contest/{subject}/{season}/{type}/{age_group}",
+    response_model=ResultsPayload,
+    responses={200: {"content": {"text/csv": {"schema": {"type": "string"}}}}},
+)
 def get_results(
     *,
     subject: SubjectAbbrev,
@@ -196,11 +200,15 @@ def get_results(
     subcontest_id = candidates[0]
     payload = get_results_payload(subcontest_id=subcontest_id, session=session)
     if format == ResultsFormat.json:
-        return payload
+        return ResultsPayload.model_validate(payload)
     return payload_as_csv(subcontest_id=subcontest_id, payload=payload)
 
 
-@router.get("/subcontests/{subcontest_id}")
+@router.get(
+    "/subcontests/{subcontest_id}",
+    response_model=ResultsPayload,
+    responses={200: {"content": {"text/csv": {"schema": {"type": "string"}}}}},
+)
 def get_subcontest_by_id(
     *,
     subcontest_id: int = Path(..., gt=0, description="Subcontest ID"),
@@ -209,5 +217,5 @@ def get_subcontest_by_id(
 ):
     payload = get_results_payload(subcontest_id=subcontest_id, session=session)
     if format == ResultsFormat.json:
-        return payload
+        return ResultsPayload.model_validate(payload)
     return payload_as_csv(subcontest_id=subcontest_id, payload=payload)

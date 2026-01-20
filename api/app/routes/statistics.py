@@ -12,6 +12,7 @@ from sqlalchemy.orm import Session
 
 from app.db import get_session
 from app.models import AgeGroup, Contestant, Person, Subcontest
+from app.schemas import StudentStatisticsResponse
 
 router = APIRouter(tags=["statistics"])
 
@@ -26,7 +27,11 @@ def _weight_expr():
     return func.least(3, func.greatest(1, func.coalesce(diff, 1)))
 
 
-@router.get("/statistics/students", response_model=None)
+@router.get(
+    "/statistics/students",
+    response_model=StudentStatisticsResponse,
+    responses={200: {"content": {"text/csv": {"schema": {"type": "string"}}}}},
+)
 def student_statistics(
     *,
     weighted: bool = Query(
@@ -103,7 +108,7 @@ def student_statistics(
     ]
 
     if format == StatisticsFormat.json:
-        return {"fields": fields, "rows": payload_rows}
+        return StudentStatisticsResponse(fields=fields, rows=payload_rows)
 
     buf = io.StringIO()
     writer = csv.writer(buf)
