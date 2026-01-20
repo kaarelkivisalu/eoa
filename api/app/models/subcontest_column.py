@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from app.models.contestant_field import ContestantField
@@ -34,7 +34,7 @@ class SubcontestColumn(Base):
     subcontest_id: Mapped[int] = mapped_column(INTEGER(11), nullable=False)
     name: Mapped[str] = mapped_column(String(64), nullable=False)
     seq_no: Mapped[int] = mapped_column(INTEGER(11), nullable=False)
-    extra: Mapped[Optional[str]] = mapped_column(String(64))
+    extra: Mapped[str | None] = mapped_column(String(64))
 
     subcontest: Mapped[Subcontest] = relationship(
         "Subcontest", back_populates="subcontest_column"

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from app.models.school import School
@@ -27,8 +27,8 @@ class SchoolAlias(Base):
     )
 
     name: Mapped[str] = mapped_column(String(64), primary_key=True)
-    correct: Mapped[Optional[int]] = mapped_column(INTEGER(11))
+    correct: Mapped[int | None] = mapped_column(INTEGER(11))
 
-    school: Mapped[Optional[School]] = relationship(
+    school: Mapped[School | None] = relationship(
         "School", back_populates="school_alias"
     )
