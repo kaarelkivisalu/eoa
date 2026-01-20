@@ -27,12 +27,12 @@ curl 'http://localhost:8000/subcontests/1' | jq
 
 - `GET /contestant/{person_id}` (only for publishable persons)
 - `GET /mentor/{mentor_id}` (only for publishable mentors; only includes publishable students)
-- `GET /people/search?q=...` (only returns publishable persons; check `X-Result-Has-More` header)
+- `GET /people/search?q=...&offset=0&limit=20` (only returns publishable persons; check `X-Result-Has-More` / `X-Result-Next-Offset`)
 
 ### Schools
 
 - `GET /schools` (returns `school_id` + `school_name`)
-- `GET /schools/search?q=...` (returns `school_id` + `school_name`; check `X-Result-Has-More` header)
+- `GET /schools/search?q=...&offset=0&limit=20` (returns `school_id` + `school_name`; check `X-Result-Has-More` / `X-Result-Next-Offset`)
 - `GET /schools/{school_id}/students` (only includes publishable students)
 - `GET /schools/{school_id}/mentors` (only includes publishable students and mentors)
 
