@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import datetime
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from app.models.subcontest import Subcontest
@@ -31,15 +31,15 @@ class Contest(Base):
     id: Mapped[int] = mapped_column(INTEGER(11), primary_key=True)
     subject_id: Mapped[int] = mapped_column(INTEGER(11), nullable=False)
     type_id: Mapped[int] = mapped_column(INTEGER(11), nullable=False)
-    year_id: Mapped[Optional[int]] = mapped_column(INTEGER(11))
-    name: Mapped[Optional[str]] = mapped_column(String(128))
-    start_date: Mapped[Optional[datetime.date]] = mapped_column(Date)
-    end_date: Mapped[Optional[datetime.date]] = mapped_column(Date)
-    year: Mapped[Optional[int]] = mapped_column(INTEGER(11))
+    year_id: Mapped[int | None] = mapped_column(INTEGER(11))
+    name: Mapped[str | None] = mapped_column(String(128))
+    start_date: Mapped[datetime.date | None] = mapped_column(Date)
+    end_date: Mapped[datetime.date | None] = mapped_column(Date)
+    year: Mapped[int | None] = mapped_column(INTEGER(11))
 
     subject: Mapped[Subject] = relationship("Subject", back_populates="contest")
     type: Mapped[Type] = relationship("Type", back_populates="contest")
-    year_: Mapped[Optional[Year]] = relationship("Year", back_populates="contest")
+    year_: Mapped[Year | None] = relationship("Year", back_populates="contest")
     subcontest: Mapped[list[Subcontest]] = relationship(
         "Subcontest", back_populates="contest"
     )

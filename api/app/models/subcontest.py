@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from app.models.age_group import AgeGroup
@@ -39,9 +39,9 @@ class Subcontest(Base):
     contest_id: Mapped[int] = mapped_column(INTEGER(11), nullable=False)
     age_group_id: Mapped[int] = mapped_column(INTEGER(11), nullable=False)
     name: Mapped[str] = mapped_column(String(64), nullable=False)
-    tasks_link: Mapped[Optional[str]] = mapped_column(String(128))
-    solutions_link: Mapped[Optional[str]] = mapped_column(String(128))
-    description: Mapped[Optional[str]] = mapped_column(String(1024))
+    tasks_link: Mapped[str | None] = mapped_column(String(128))
+    solutions_link: Mapped[str | None] = mapped_column(String(128))
+    description: Mapped[str | None] = mapped_column(String(1024))
 
     age_group: Mapped[AgeGroup] = relationship("AgeGroup", back_populates="subcontest")
     contest: Mapped[Contest] = relationship("Contest", back_populates="subcontest")
