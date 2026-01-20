@@ -5,15 +5,12 @@ import io
 from enum import Enum
 from typing import Any
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import HTTPException, Query
 from fastapi.responses import Response
 from sqlalchemy import select
 from sqlalchemy.orm import Session, joinedload
 
-from app.db import get_session
 from app.models import Contest, Contestant, ContestantField, Subcontest, SubcontestColumn
-
-router = APIRouter(tags=["results"])
 
 
 class ResultsFormat(str, Enum):
@@ -21,7 +18,7 @@ class ResultsFormat(str, Enum):
     csv = "csv"
 
 
-def _contest_display_name(subcontest: Subcontest) -> str:
+def contest_display_name(subcontest: Subcontest) -> str:
     contest = subcontest.contest
     contest_name = contest.name or ""
     year = contest.year
@@ -30,27 +27,7 @@ def _contest_display_name(subcontest: Subcontest) -> str:
     return contest_name
 
 
-@router.get("/subcontests/{subcontest_id}/results")
-def get_subcontest_results(
-    *,
-    subcontest_id: int,
-    format: ResultsFormat = Query(ResultsFormat.json),
-    session: Session = Depends(get_session),
-):
-    payload = _get_subcontest_results(
-        subcontest_id=subcontest_id,
-        session=session,
-    )
-    if format == ResultsFormat.json:
-        return payload
-    return _as_csv(subcontest_id=subcontest_id, payload=payload)
-
-
-def _get_subcontest_results(
-    *,
-    subcontest_id: int,
-    session: Session,
-):
+def get_results_payload(*, subcontest_id: int, session: Session) -> dict[str, Any]:
     subcontest = session.execute(
         select(Subcontest)
         .where(Subcontest.id == subcontest_id)
@@ -102,7 +79,7 @@ def _get_subcontest_results(
         for task_id, contestant_id, entry in rows:
             entries_by_task_and_contestant.setdefault(task_id, {})[contestant_id] = entry
 
-    contest_name = _contest_display_name(subcontest)
+    contest_name = contest_display_name(subcontest)
     title = ""
     contest = subcontest.contest
     if contest.subject is not None and contest.type is not None and contest.year is not None:
@@ -140,14 +117,17 @@ def _get_subcontest_results(
                     )
                     if name is not None
                 ],
-                "fields": [entries_by_task_and_contestant.get(col.id, {}).get(c.id, "") for col in columns],
+                "fields": [
+                    entries_by_task_and_contestant.get(col.id, {}).get(c.id, "")
+                    for col in columns
+                ],
             }
             for c in contestants
         ],
     }
 
 
-def _as_csv(*, subcontest_id: int, payload: dict[str, Any]) -> Response:
+def payload_as_csv(*, subcontest_id: int, payload: dict[str, Any]) -> Response:
     columns: list[str] = payload.get("columns") or []
     rows: list[dict[str, Any]] = payload.get("rows") or []
 
@@ -190,5 +170,10 @@ def _as_csv(*, subcontest_id: int, payload: dict[str, Any]) -> Response:
     return Response(
         content=buf.getvalue(),
         media_type="text/csv; charset=utf-8",
-        headers={"Content-Disposition": f'attachment; filename="subcontest_{subcontest_id}_results.csv"'},
+        headers={
+            "Content-Disposition": (
+                f'attachment; filename="subcontest_{subcontest_id}_results.csv"'
+            )
+        },
     )
+

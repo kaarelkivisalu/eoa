@@ -26,6 +26,10 @@ SUBJECT_ABBREV: dict[str, str] = {
     "Inimeseõpetus": "ini",
 }
 
+SUBJECT_BY_ABBREV: dict[str, str] = {abbrev: name for name, abbrev in SUBJECT_ABBREV.items()}
+if len(SUBJECT_BY_ABBREV) != len(SUBJECT_ABBREV):
+    raise RuntimeError("Duplicate subject abbreviations in SUBJECT_ABBREV")
+
 
 class SubjectAbbrev(str, Enum):
     efo = "efo"
