@@ -26,7 +26,7 @@ def _weight_expr():
     return func.least(3, func.greatest(1, func.coalesce(diff, 1)))
 
 
-@router.get("/statistics/students")
+@router.get("/statistics/students", response_model=None)
 def student_statistics(
     *,
     weighted: bool = Query(
@@ -38,7 +38,7 @@ def student_statistics(
     ),
     format: StatisticsFormat = Query(StatisticsFormat.json),
     session: Session = Depends(get_session),
-) -> list[dict[str, Any]] | Response:
+) -> Any:
     place_value = _weight_expr() if weighted else 1
 
     total_participations = func.count().label("total_participations")
