@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import Any
 
 from fastapi import APIRouter, Depends, Query
-from sqlalchemy import case, func, select
+from sqlalchemy import case, func, or_, select
 from sqlalchemy.orm import Session
 
 from app.db import get_session
@@ -31,6 +31,7 @@ def student_statistics(
 ) -> list[dict[str, Any]]:
     place_value = _weight_expr() if weighted else 1
 
+    total_participations = func.count().label("total_participations")
     first_places = func.sum(case((Contestant.placement == 1, place_value), else_=0)).label(
         "first_places"
     )
@@ -45,7 +46,7 @@ def student_statistics(
         select(
             Person.id.label("person_id"),
             Person.name.label("person_name"),
-            func.count().label("total_participations"),
+            total_participations,
             first_places,
             second_places,
             third_places,
@@ -56,8 +57,14 @@ def student_statistics(
         .join(AgeGroup, Subcontest.age_group_id == AgeGroup.id)
         .where(Person.publishable == 1)
         .group_by(Person.id, Person.name)
+        .having(
+            or_(
+                total_participations >= 5,
+                (first_places + second_places + third_places) > 0,
+            )
+        )
         .order_by(
-            func.count().desc(),
+            total_participations.desc(),
             first_places.desc(),
             second_places.desc(),
             third_places.desc(),
@@ -76,4 +83,3 @@ def student_statistics(
         }
         for r in rows
     ]
-
