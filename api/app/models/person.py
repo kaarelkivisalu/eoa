@@ -1,10 +1,16 @@
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 from sqlalchemy import Index, String, text
 from sqlalchemy.dialects.mysql import INTEGER, TINYINT
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import Base
+
+if TYPE_CHECKING:
+    from app.models.contestant import Contestant
+    from app.models.person_alias import PersonAlias
 
 
 class Person(Base):
@@ -26,12 +32,12 @@ class Person(Base):
         TINYINT(1), nullable=False, server_default=text("1")
     )
 
-    person_alias: Mapped[list["PersonAlias"]] = relationship(
+    person_alias: Mapped[list[PersonAlias]] = relationship(
         "PersonAlias", back_populates="person"
     )
-    contestant: Mapped[list["Contestant"]] = relationship(
+    contestant: Mapped[list[Contestant]] = relationship(
         "Contestant", back_populates="person"
     )
-    contestant_: Mapped[list["Contestant"]] = relationship(
+    contestant_: Mapped[list[Contestant]] = relationship(
         "Contestant", secondary="mentor", back_populates="mentor"
     )

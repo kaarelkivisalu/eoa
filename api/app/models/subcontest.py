@@ -1,6 +1,12 @@
 from __future__ import annotations
 
-from typing import Optional
+from typing import TYPE_CHECKING, Optional
+
+if TYPE_CHECKING:
+    from app.models.age_group import AgeGroup
+    from app.models.contest import Contest
+    from app.models.contestant import Contestant
+    from app.models.subcontest_column import SubcontestColumn
 
 from sqlalchemy import ForeignKeyConstraint, Index, String
 from sqlalchemy.dialects.mysql import INTEGER
@@ -37,13 +43,11 @@ class Subcontest(Base):
     solutions_link: Mapped[Optional[str]] = mapped_column(String(128))
     description: Mapped[Optional[str]] = mapped_column(String(1024))
 
-    age_group: Mapped["AgeGroup"] = relationship(
-        "AgeGroup", back_populates="subcontest"
-    )
-    contest: Mapped["Contest"] = relationship("Contest", back_populates="subcontest")
-    contestant: Mapped[list["Contestant"]] = relationship(
+    age_group: Mapped[AgeGroup] = relationship("AgeGroup", back_populates="subcontest")
+    contest: Mapped[Contest] = relationship("Contest", back_populates="subcontest")
+    contestant: Mapped[list[Contestant]] = relationship(
         "Contestant", back_populates="subcontest"
     )
-    subcontest_column: Mapped[list["SubcontestColumn"]] = relationship(
+    subcontest_column: Mapped[list[SubcontestColumn]] = relationship(
         "SubcontestColumn", back_populates="subcontest"
     )

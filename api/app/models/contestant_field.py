@@ -1,10 +1,16 @@
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 from sqlalchemy import ForeignKeyConstraint, Index, String
 from sqlalchemy.dialects.mysql import INTEGER
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import Base
+
+if TYPE_CHECKING:
+    from app.models.contestant import Contestant
+    from app.models.subcontest_column import SubcontestColumn
 
 
 class ContestantField(Base):
@@ -30,9 +36,9 @@ class ContestantField(Base):
     contestant_id: Mapped[int] = mapped_column(INTEGER(11), primary_key=True)
     entry: Mapped[str] = mapped_column(String(64), nullable=False)
 
-    contestant: Mapped["Contestant"] = relationship(
+    contestant: Mapped[Contestant] = relationship(
         "Contestant", back_populates="contestant_field"
     )
-    task: Mapped["SubcontestColumn"] = relationship(
+    task: Mapped[SubcontestColumn] = relationship(
         "SubcontestColumn", back_populates="contestant_field"
     )

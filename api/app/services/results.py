@@ -5,7 +5,7 @@ import io
 from enum import Enum
 from typing import Any
 
-from fastapi import HTTPException, Query
+from fastapi import HTTPException
 from fastapi.responses import Response
 from sqlalchemy import select
 from sqlalchemy.orm import Session, joinedload

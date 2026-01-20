@@ -78,7 +78,7 @@ def list_seasons(
         .scalars()
         .all()
     )
-    return [f"{y}-{y + 1}" for y in years]
+    return [f"{y}-{y + 1}" for y in years if y is not None]
 
 
 @router.get("/contest/{subject}/{season}", response_model=list[str])

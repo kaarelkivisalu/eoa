@@ -1,6 +1,10 @@
 from __future__ import annotations
 
-from typing import Optional
+from typing import TYPE_CHECKING, Optional
+
+if TYPE_CHECKING:
+    from app.models.contestant_field import ContestantField
+    from app.models.subcontest import Subcontest
 
 from sqlalchemy import ForeignKeyConstraint, Index, String
 from sqlalchemy.dialects.mysql import INTEGER
@@ -32,9 +36,9 @@ class SubcontestColumn(Base):
     seq_no: Mapped[int] = mapped_column(INTEGER(11), nullable=False)
     extra: Mapped[Optional[str]] = mapped_column(String(64))
 
-    subcontest: Mapped["Subcontest"] = relationship(
+    subcontest: Mapped[Subcontest] = relationship(
         "Subcontest", back_populates="subcontest_column"
     )
-    contestant_field: Mapped[list["ContestantField"]] = relationship(
+    contestant_field: Mapped[list[ContestantField]] = relationship(
         "ContestantField", back_populates="task"
     )
