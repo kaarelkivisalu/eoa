@@ -1,8 +1,12 @@
 from __future__ import annotations
 
+import csv
+import io
+from enum import Enum
 from typing import Any
 
 from fastapi import APIRouter, Depends, Query
+from fastapi.responses import Response
 from sqlalchemy import case, func, or_, select
 from sqlalchemy.orm import Session
 
@@ -10,6 +14,11 @@ from app.db import get_session
 from app.models import AgeGroup, Contestant, Person, Subcontest
 
 router = APIRouter(tags=["statistics"])
+
+
+class StatisticsFormat(str, Enum):
+    json = "json"
+    csv = "csv"
 
 
 def _weight_expr():
@@ -27,8 +36,9 @@ def student_statistics(
             "clamp(age_group.max_class - age_group.min_class, 1, 3)."
         ),
     ),
+    format: StatisticsFormat = Query(StatisticsFormat.json),
     session: Session = Depends(get_session),
-) -> list[dict[str, Any]]:
+) -> list[dict[str, Any]] | Response:
     place_value = _weight_expr() if weighted else 1
 
     total_participations = func.count().label("total_participations")
@@ -59,7 +69,7 @@ def student_statistics(
         .group_by(Person.id, Person.name)
         .having(
             or_(
-                total_participations >= 5,
+                total_participations >= 10,
                 (first_places + second_places + third_places) > 0,
             )
         )
@@ -72,7 +82,7 @@ def student_statistics(
         )
     ).all()
 
-    return [
+    payload = [
         {
             "person_id": r.person_id,
             "person_name": r.person_name,
@@ -83,3 +93,37 @@ def student_statistics(
         }
         for r in rows
     ]
+
+    if format == StatisticsFormat.json:
+        return payload
+
+    buf = io.StringIO()
+    writer = csv.writer(buf)
+    writer.writerow(
+        [
+            "person_id",
+            "person_name",
+            "total_participations",
+            "first_places",
+            "second_places",
+            "third_places",
+        ]
+    )
+    for row in payload:
+        writer.writerow(
+            [
+                row["person_id"],
+                row["person_name"],
+                row["total_participations"],
+                row["first_places"],
+                row["second_places"],
+                row["third_places"],
+            ]
+        )
+
+    suffix = "_weighted" if weighted else ""
+    return Response(
+        content=buf.getvalue(),
+        media_type="text/csv; charset=utf-8",
+        headers={"Content-Disposition": f'attachment; filename="student_statistics{suffix}.csv"'},
+    )

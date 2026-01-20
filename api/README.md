@@ -38,3 +38,4 @@ curl 'http://localhost:8000/subcontests/1' | jq
 
 - `GET /statistics/students`
 - `GET /statistics/students?weighted=true`
+- `GET /statistics/students?format=csv`
