@@ -20,3 +20,8 @@ curl -L 'http://localhost:8000/contest/efo/2023-2024/lahtine/12.%20klass?format=
 ```
 
 `/subjects` was removed; use `GET /contest` for the subject list (abbrev + full name).
+
+### People
+
+- `GET /contestant/{person_id}` (only for publishable persons)
+- `GET /mentor/{mentor_id}` (only for publishable mentors; only includes publishable students)

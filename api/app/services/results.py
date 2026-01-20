@@ -10,7 +10,7 @@ from fastapi.responses import Response
 from sqlalchemy import select
 from sqlalchemy.orm import Session, joinedload
 
-from app.models import Contest, Contestant, ContestantField, Subcontest, SubcontestColumn
+from app.models import Contest, Contestant, ContestantField, Person, Subcontest, SubcontestColumn
 
 
 class ResultsFormat(str, Enum):
@@ -55,7 +55,9 @@ def get_results_payload(*, subcontest_id: int, session: Session) -> dict[str, An
     contestants = (
         session.execute(
             select(Contestant)
+            .join(Person, Contestant.person_id == Person.id)
             .where(Contestant.subcontest_id == subcontest_id)
+            .where(Person.publishable == 1)
             .options(
                 joinedload(Contestant.person),
                 joinedload(Contestant.age_group),
@@ -113,7 +115,11 @@ def get_results_payload(*, subcontest_id: int, session: Session) -> dict[str, An
                 "mentors": [
                     name
                     for name in (
-                        maybe_name(m) for m in sorted(c.mentor, key=lambda p: p.name)
+                        maybe_name(m)
+                        for m in sorted(
+                            (m for m in c.mentor if getattr(m, "publishable", 1) == 1),
+                            key=lambda p: p.name,
+                        )
                     )
                     if name is not None
                 ],
@@ -176,4 +182,3 @@ def payload_as_csv(*, subcontest_id: int, payload: dict[str, Any]) -> Response:
             )
         },
     )
-
