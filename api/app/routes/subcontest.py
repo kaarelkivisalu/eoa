@@ -198,3 +198,16 @@ def get_results(
     if format == ResultsFormat.json:
         return payload
     return payload_as_csv(subcontest_id=subcontest_id, payload=payload)
+
+
+@router.get("/contest/by-subcontest-id/{subcontest_id}")
+def get_results_by_subcontest_id(
+    *,
+    subcontest_id: int = Path(..., gt=0, description="Subcontest ID"),
+    format: ResultsFormat = Query(ResultsFormat.json),
+    session: Session = Depends(get_session),
+):
+    payload = get_results_payload(subcontest_id=subcontest_id, session=session)
+    if format == ResultsFormat.json:
+        return payload
+    return payload_as_csv(subcontest_id=subcontest_id, payload=payload)
