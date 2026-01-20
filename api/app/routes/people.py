@@ -28,7 +28,7 @@ def search_people(
     rows = session.execute(
         select(Person.id, Person.name)
         .where(Person.publishable == 1)
-        .where(Person.name.like(f"%{query}%"))
+        .where(Person.name.contains(query, autoescape=True))
         .order_by(Person.name, Person.id)
         .offset(offset)
         .limit(limit + 1)
