@@ -1,8 +1,8 @@
 from __future__ import annotations
 
+import os
 from dataclasses import dataclass
 from pathlib import Path
-import os
 
 from dotenv import load_dotenv
 
@@ -22,10 +22,7 @@ class Settings:
     @property
     def database_url(self) -> str:
         connection = self.db_connection.lower()
-        if connection in {"mariadb", "mysql"}:
-            driver = "mysql+pymysql"
-        else:
-            driver = connection
+        driver = "mysql+pymysql" if connection in {"mariadb", "mysql"} else connection
         return (
             f"{driver}://{self.db_username}:{self.db_password}"
             f"@{self.db_host}:{self.db_port}/{self.db_database}"

@@ -1,18 +1,24 @@
 from __future__ import annotations
 
+from typing import TYPE_CHECKING, Annotated
+
 from fastapi import APIRouter, Depends, HTTPException, Path, Query, Response
 from sqlalchemy import func, select
-from sqlalchemy.orm import Session
 
 from app.db import get_session
 from app.models import Contestant, Person, School, t_mentor
 from app.schemas import SchoolParticipantsResponse, SchoolSummary
 
+if TYPE_CHECKING:
+    from sqlalchemy.orm import Session
+
 router = APIRouter(tags=["schools"])
 
 
 @router.get("/schools", response_model=list[SchoolSummary])
-def list_schools(*, session: Session = Depends(get_session)) -> list[SchoolSummary]:
+def list_schools(
+    *, session: Annotated[Session, Depends(get_session)]
+) -> list[SchoolSummary]:
     rows = session.execute(select(School.id, School.name).order_by(School.id)).all()
     return [SchoolSummary(school_id=r.id, school_name=r.name) for r in rows]
 
@@ -20,11 +26,14 @@ def list_schools(*, session: Session = Depends(get_session)) -> list[SchoolSumma
 @router.get("/schools/search", response_model=list[SchoolSummary])
 def search_schools(
     *,
-    q: str = Query(..., min_length=1, description="Substring search in school name."),
-    offset: int = Query(0, ge=0, description="Pagination offset."),
-    limit: int = Query(20, ge=1, le=200),
+    q: Annotated[
+        str,
+        Query(min_length=1, description="Substring search in school name."),
+    ],
     response: Response,
-    session: Session = Depends(get_session),
+    session: Annotated[Session, Depends(get_session)],
+    offset: Annotated[int, Query(ge=0, description="Pagination offset.")] = 0,
+    limit: Annotated[int, Query(ge=1, le=200)] = 20,
 ) -> list[SchoolSummary]:
     query = q.strip()
     if not query:
@@ -61,8 +70,8 @@ def _get_school_or_404(*, school_id: int, session: Session) -> School:
 @router.get("/schools/{school_id}/students", response_model=SchoolParticipantsResponse)
 def school_students(
     *,
-    school_id: int = Path(..., gt=0),
-    session: Session = Depends(get_session),
+    school_id: Annotated[int, Path(gt=0)],
+    session: Annotated[Session, Depends(get_session)],
 ) -> SchoolParticipantsResponse:
     school = _get_school_or_404(school_id=school_id, session=session)
 
@@ -99,8 +108,8 @@ def school_students(
 @router.get("/schools/{school_id}/mentors", response_model=SchoolParticipantsResponse)
 def school_mentors(
     *,
-    school_id: int = Path(..., gt=0),
-    session: Session = Depends(get_session),
+    school_id: Annotated[int, Path(gt=0)],
+    session: Annotated[Session, Depends(get_session)],
 ) -> SchoolParticipantsResponse:
     school = _get_school_or_404(school_id=school_id, session=session)
 

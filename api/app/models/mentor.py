@@ -3,7 +3,6 @@ from sqlalchemy.dialects.mysql import INTEGER
 
 from app.db.base import Base
 
-
 t_mentor = Table(
     "mentor",
     Base.metadata,

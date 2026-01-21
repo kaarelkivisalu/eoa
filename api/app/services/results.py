@@ -3,12 +3,12 @@ from __future__ import annotations
 import csv
 import io
 from enum import Enum
-from typing import Any
+from typing import TYPE_CHECKING
 
 from fastapi import HTTPException
 from fastapi.responses import Response
 from sqlalchemy import select
-from sqlalchemy.orm import Session, joinedload
+from sqlalchemy.orm import joinedload
 
 from app.models import (
     Contest,
@@ -18,6 +18,9 @@ from app.models import (
     Subcontest,
     SubcontestColumn,
 )
+
+if TYPE_CHECKING:
+    from sqlalchemy.orm import Session
 
 
 class ResultsFormat(str, Enum):
@@ -34,7 +37,7 @@ def contest_display_name(subcontest: Subcontest) -> str:
     return contest_name
 
 
-def get_results_payload(*, subcontest_id: int, session: Session) -> dict[str, Any]:
+def get_results_payload(*, subcontest_id: int, session: Session) -> dict[str, object]:
     subcontest = session.execute(
         select(Subcontest)
         .where(Subcontest.id == subcontest_id)
@@ -109,7 +112,7 @@ def get_results_payload(*, subcontest_id: int, session: Session) -> dict[str, An
             f"{contest.year}/{contest.year + 1} - {subcontest.age_group.name}"
         )
 
-    def maybe_name(value: Any) -> str | None:
+    def maybe_name(value: object) -> str | None:
         if value is None:
             return None
         name = getattr(value, "name", None)
@@ -152,9 +155,9 @@ def get_results_payload(*, subcontest_id: int, session: Session) -> dict[str, An
     }
 
 
-def payload_as_csv(*, subcontest_id: int, payload: dict[str, Any]) -> Response:
+def payload_as_csv(*, subcontest_id: int, payload: dict[str, object]) -> Response:
     columns: list[str] = payload.get("columns") or []
-    rows: list[dict[str, Any]] = payload.get("rows") or []
+    rows: list[dict[str, object]] = payload.get("rows") or []
 
     has_age_group = any((r.get("age_group") or "") != "" for r in rows)
     has_school = any((r.get("school") or "") != "" for r in rows)

@@ -1,10 +1,11 @@
 from __future__ import annotations
 
 import re
+from dataclasses import dataclass
+from typing import TYPE_CHECKING, Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Path, Query
 from sqlalchemy import func, select
-from sqlalchemy.orm import Session
 
 from app.db import get_session
 from app.domain.subjects import SUBJECT_ABBREV, SUBJECT_BY_ABBREV, SubjectAbbrev
@@ -12,7 +13,43 @@ from app.models import AgeGroup, Contest, Subcontest, Subject, Type
 from app.schemas import ResultsPayload, SubjectListItem
 from app.services.results import ResultsFormat, get_results_payload, payload_as_csv
 
+if TYPE_CHECKING:
+    from fastapi.responses import Response
+    from sqlalchemy.orm import Session
+
 router = APIRouter(tags=["contest"])
+
+SEASON_PATH = Path(
+    description=(
+        "School-year season in format YYYY-YYYY (end year must be start year + 1)."
+    ),
+    pattern=r"^\d{4}[-_]\d{4}$",
+    examples=["2017-2018"],
+)
+CONTEST_TYPE_PATH = Path(alias="type")
+RESULTS_FORMAT_QUERY = Query(alias="format")
+
+
+@dataclass(frozen=True, slots=True)
+class ResultsLookup:
+    subject: SubjectAbbrev
+    season: str
+    contest_type: str
+    age_group: str
+
+
+def _results_lookup(
+    subject: SubjectAbbrev,
+    season: Annotated[str, SEASON_PATH],
+    contest_type: Annotated[str, CONTEST_TYPE_PATH],
+    age_group: str,
+) -> ResultsLookup:
+    return ResultsLookup(
+        subject=subject,
+        season=season,
+        contest_type=contest_type,
+        age_group=age_group,
+    )
 
 
 def _parse_season_start_year(season: str) -> int:
@@ -31,7 +68,9 @@ def _parse_season_start_year(season: str) -> int:
 
 
 @router.get("/contest", response_model=list[SubjectListItem])
-def list_subjects(*, session: Session = Depends(get_session)) -> list[SubjectListItem]:
+def list_subjects(
+    *, session: Annotated[Session, Depends(get_session)]
+) -> list[SubjectListItem]:
     subject_names = (
         session.execute(
             select(Subject.name)
@@ -60,7 +99,7 @@ def list_subjects(*, session: Session = Depends(get_session)) -> list[SubjectLis
 def list_seasons(
     *,
     subject: SubjectAbbrev,
-    session: Session = Depends(get_session),
+    session: Annotated[Session, Depends(get_session)],
 ) -> list[str]:
     subject_name = SUBJECT_BY_ABBREV.get(subject.value)
     if subject_name is None:
@@ -85,13 +124,8 @@ def list_seasons(
 def list_contest_types(
     *,
     subject: SubjectAbbrev,
-    season: str = Path(
-        ...,
-        description="School-year season in format YYYY-YYYY (end year must be start year + 1).",
-        pattern=r"^\d{4}[-_]\d{4}$",
-        examples=["2017-2018"],
-    ),
-    session: Session = Depends(get_session),
+    season: Annotated[str, SEASON_PATH],
+    session: Annotated[Session, Depends(get_session)],
 ) -> list[str]:
     subject_name = SUBJECT_BY_ABBREV.get(subject.value)
     if subject_name is None:
@@ -119,21 +153,16 @@ def list_contest_types(
 def list_age_groups(
     *,
     subject: SubjectAbbrev,
-    season: str = Path(
-        ...,
-        description="School-year season in format YYYY-YYYY (end year must be start year + 1).",
-        pattern=r"^\d{4}[-_]\d{4}$",
-        examples=["2017-2018"],
-    ),
-    type: str,
-    session: Session = Depends(get_session),
+    season: Annotated[str, SEASON_PATH],
+    contest_type: Annotated[str, CONTEST_TYPE_PATH],
+    session: Annotated[Session, Depends(get_session)],
 ) -> list[str]:
     subject_name = SUBJECT_BY_ABBREV.get(subject.value)
     if subject_name is None:
         raise HTTPException(status_code=400, detail="Invalid subject")
 
     year = _parse_season_start_year(season)
-    contest_type_norm = type.strip().lower()
+    contest_type_norm = contest_type.strip().lower()
 
     age_groups = (
         session.execute(
@@ -161,25 +190,17 @@ def list_age_groups(
 )
 def get_results(
     *,
-    subject: SubjectAbbrev,
-    season: str = Path(
-        ...,
-        description="School-year season in format YYYY-YYYY (end year must be start year + 1).",
-        pattern=r"^\d{4}[-_]\d{4}$",
-        examples=["2017-2018"],
-    ),
-    type: str,
-    age_group: str,
-    format: ResultsFormat = Query(ResultsFormat.json),
-    session: Session = Depends(get_session),
-):
-    subject_name = SUBJECT_BY_ABBREV.get(subject.value)
+    lookup: Annotated[ResultsLookup, Depends(_results_lookup)],
+    session: Annotated[Session, Depends(get_session)],
+    results_format: Annotated[ResultsFormat, RESULTS_FORMAT_QUERY] = ResultsFormat.json,
+) -> ResultsPayload | Response:
+    subject_name = SUBJECT_BY_ABBREV.get(lookup.subject.value)
     if subject_name is None:
         raise HTTPException(status_code=400, detail="Invalid subject")
 
-    year = _parse_season_start_year(season)
-    contest_type_norm = type.strip().lower()
-    age_group_norm = age_group.strip().lower()
+    year = _parse_season_start_year(lookup.season)
+    contest_type_norm = lookup.contest_type.strip().lower()
+    age_group_norm = lookup.age_group.strip().lower()
 
     candidates = (
         session.execute(
@@ -207,7 +228,7 @@ def get_results(
 
     subcontest_id = candidates[0]
     payload = get_results_payload(subcontest_id=subcontest_id, session=session)
-    if format == ResultsFormat.json:
+    if results_format == ResultsFormat.json:
         return ResultsPayload.model_validate(payload)
     return payload_as_csv(subcontest_id=subcontest_id, payload=payload)
 
@@ -219,11 +240,11 @@ def get_results(
 )
 def get_subcontest_by_id(
     *,
-    subcontest_id: int = Path(..., gt=0, description="Subcontest ID"),
-    format: ResultsFormat = Query(ResultsFormat.json),
-    session: Session = Depends(get_session),
-):
+    subcontest_id: Annotated[int, Path(gt=0, description="Subcontest ID")],
+    session: Annotated[Session, Depends(get_session)],
+    results_format: Annotated[ResultsFormat, RESULTS_FORMAT_QUERY] = ResultsFormat.json,
+) -> ResultsPayload | Response:
     payload = get_results_payload(subcontest_id=subcontest_id, session=session)
-    if format == ResultsFormat.json:
+    if results_format == ResultsFormat.json:
         return ResultsPayload.model_validate(payload)
     return payload_as_csv(subcontest_id=subcontest_id, payload=payload)
