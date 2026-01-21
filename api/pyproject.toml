@@ -10,12 +10,18 @@ dependencies = [
     "pymysql>=1.1.2",
     "python-dotenv>=1.2.1",
     "sqlalchemy>=2.0.45",
-    "uvicorn[standard]>=0.40.0",
 ]
 
 [dependency-groups]
-dev = [
-    "ruff",
-    "sqlacodegen>=3.2.0",
-    "ty",
-]
+dev = ["ruff", "sqlacodegen>=3.2.0", "ty"]
+
+[tool.ruff.lint]
+select = ["ALL"]
+ignore = ["D100", "D101"]
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
+[tool.ruff.lint.per-file-ignores]
+"migrations/*" = ["INP001", "ERA001"]
+"migrations/versions/*" = ["ALL"]
