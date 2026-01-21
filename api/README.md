@@ -2,6 +2,14 @@
 
 ## Dev
 
+To install dependencies:
+
+```sh
+uv sync --locked
+```
+
+To run checks:
+
 ```sh
 cd api
 uv run ruff format .
@@ -9,10 +17,11 @@ uv run ruff check .
 uv run ty check .
 ```
 
-To run API
+To run API in dev mode:
 
 ```sh
-uv run fastapi dev main.py
+cd api
+uv run fastapi dev
 ```
 
 ### Subcontest tree (each endpoint goes one level deeper)
