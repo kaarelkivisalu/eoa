@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, ClassVar
 
 from sqlalchemy import String
 from sqlalchemy.dialects.mysql import INTEGER
@@ -14,7 +14,7 @@ if TYPE_CHECKING:
 
 class Year(Base):
     __tablename__ = "year"
-    __table_args__ = {
+    __table_args__: ClassVar[dict[str, str]] = {
         "comment": "Õppeaasta - äkki on kasulik kui tahta sama õppeaasta piirkonna "
         "ning lv tulemusi kiiresti näha?"
     }

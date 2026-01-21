@@ -1,8 +1,9 @@
 from __future__ import annotations
 
+from typing import TYPE_CHECKING, Annotated
+
 from fastapi import APIRouter, Depends, HTTPException, Path, Query, Response
 from sqlalchemy import select
-from sqlalchemy.orm import Session
 
 from app.db import get_session
 from app.domain.subjects import SUBJECT_ABBREV
@@ -11,12 +12,15 @@ from app.models import (
     Contest,
     Contestant,
     Person,
-    Subject,
     Subcontest,
+    Subject,
     Type,
     t_mentor,
 )
 from app.schemas import ContestantEntry, MentorEntry, PersonSummary
+
+if TYPE_CHECKING:
+    from sqlalchemy.orm import Session
 
 router = APIRouter(tags=["people"])
 
@@ -24,11 +28,14 @@ router = APIRouter(tags=["people"])
 @router.get("/people/search", response_model=list[PersonSummary])
 def search_people(
     *,
-    q: str = Query(..., min_length=1, description="Substring search in person name."),
-    offset: int = Query(0, ge=0, description="Pagination offset."),
-    limit: int = Query(20, ge=1, le=200),
+    q: Annotated[
+        str,
+        Query(min_length=1, description="Substring search in person name."),
+    ],
     response: Response,
-    session: Session = Depends(get_session),
+    session: Annotated[Session, Depends(get_session)],
+    offset: Annotated[int, Query(ge=0, description="Pagination offset.")] = 0,
+    limit: Annotated[int, Query(ge=1, le=200)] = 20,
 ) -> list[PersonSummary]:
     query = q.strip()
     if not query:
@@ -69,8 +76,10 @@ def _subject_abbrev(subject_name: str | None) -> str | None:
 @router.get("/contestant/{person_id}", response_model=list[ContestantEntry])
 def contestant(
     *,
-    person_id: int = Path(..., gt=0, description="Person ID (must be publishable)."),
-    session: Session = Depends(get_session),
+    person_id: Annotated[
+        int, Path(gt=0, description="Person ID (must be publishable).")
+    ],
+    session: Annotated[Session, Depends(get_session)],
 ) -> list[ContestantEntry]:
     person_row = session.execute(
         select(Person.name, Person.publishable).where(Person.id == person_id)
@@ -130,10 +139,11 @@ def contestant(
 @router.get("/mentor/{person_id}", response_model=list[MentorEntry])
 def mentor(
     *,
-    person_id: int = Path(
-        ..., gt=0, description="Mentor person ID (must be publishable)."
-    ),
-    session: Session = Depends(get_session),
+    person_id: Annotated[
+        int,
+        Path(gt=0, description="Mentor person ID (must be publishable)."),
+    ],
+    session: Annotated[Session, Depends(get_session)],
 ) -> list[MentorEntry]:
     mentor_row = session.execute(
         select(Person.name, Person.publishable).where(Person.id == person_id)

@@ -3,16 +3,18 @@ from __future__ import annotations
 import csv
 import io
 from enum import Enum
-from typing import Any
+from typing import TYPE_CHECKING, Annotated
 
 from fastapi import APIRouter, Depends, Query
 from fastapi.responses import Response
 from sqlalchemy import case, func, or_, select
-from sqlalchemy.orm import Session
 
 from app.db import get_session
 from app.models import AgeGroup, Contestant, Person, Subcontest
 from app.schemas import StudentStatisticsResponse
+
+if TYPE_CHECKING:
+    from sqlalchemy.orm import Session
 
 router = APIRouter(tags=["statistics"])
 
@@ -21,8 +23,13 @@ class StatisticsFormat(str, Enum):
     json = "json"
     csv = "csv"
 
+FIRST_PLACE = 1
+SECOND_PLACE = 2
+THIRD_PLACE = 3
+MIN_PARTICIPATIONS = 10
 
-def _weight_expr():
+
+def _weight_expr() -> object:
     diff = AgeGroup.max_class - AgeGroup.min_class
     return func.least(3, func.greatest(1, func.coalesce(diff, 1)))
 
@@ -34,27 +41,32 @@ def _weight_expr():
 )
 def student_statistics(
     *,
-    weighted: bool = Query(
-        False,
-        description=(
-            "If true, 1st/2nd/3rd place sums are weighted by "
-            "clamp(age_group.max_class - age_group.min_class, 1, 3)."
+    session: Annotated[Session, Depends(get_session)],
+    weighted: Annotated[
+        bool,
+        Query(
+            description=(
+                "If true, 1st/2nd/3rd place sums are weighted by "
+                "clamp(age_group.max_class - age_group.min_class, 1, 3)."
+            )
         ),
-    ),
-    format: StatisticsFormat = Query(StatisticsFormat.json),
-    session: Session = Depends(get_session),
-) -> Any:
+    ] = False,
+    statistics_format: Annotated[
+        StatisticsFormat,
+        Query(alias="format"),
+    ] = StatisticsFormat.json,
+) -> StudentStatisticsResponse | Response:
     place_value = _weight_expr() if weighted else 1
 
     total_participations = func.count().label("total_participations")
     first_places = func.sum(
-        case((Contestant.placement == 1, place_value), else_=0)
+        case((Contestant.placement == FIRST_PLACE, place_value), else_=0)
     ).label("first_places")
     second_places = func.sum(
-        case((Contestant.placement == 2, place_value), else_=0)
+        case((Contestant.placement == SECOND_PLACE, place_value), else_=0)
     ).label("second_places")
     third_places = func.sum(
-        case((Contestant.placement == 3, place_value), else_=0)
+        case((Contestant.placement == THIRD_PLACE, place_value), else_=0)
     ).label("third_places")
 
     rows = session.execute(
@@ -74,7 +86,7 @@ def student_statistics(
         .group_by(Person.id, Person.name)
         .having(
             or_(
-                total_participations >= 10,
+                total_participations >= MIN_PARTICIPATIONS,
                 (first_places + second_places + third_places) > 0,
             )
         )
@@ -107,7 +119,7 @@ def student_statistics(
         for r in rows
     ]
 
-    if format == StatisticsFormat.json:
+    if statistics_format == StatisticsFormat.json:
         return StudentStatisticsResponse(fields=fields, rows=payload_rows)
 
     buf = io.StringIO()

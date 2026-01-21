@@ -1,6 +1,6 @@
 from .common import HealthResponse, TableResponse
 from .contest import ResultsPayload, ResultsRow, SubjectListItem
-from .people import MentorEntry, PersonSummary, ContestantEntry
+from .people import ContestantEntry, MentorEntry, PersonSummary
 from .schools import SchoolParticipantsResponse, SchoolSummary
 from .statistics import StudentStatisticsResponse
 

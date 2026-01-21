@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, ClassVar
 
 from sqlalchemy import String
 from sqlalchemy.dialects.mysql import INTEGER
@@ -14,7 +14,9 @@ if TYPE_CHECKING:
 
 class Type(Base):
     __tablename__ = "type"
-    __table_args__ = {"comment": "Võistluse tüüp - lahtine, pkv, lv, üleriigiline"}
+    __table_args__: ClassVar[dict[str, str]] = {
+        "comment": "Võistluse tüüp - lahtine, pkv, lv, üleriigiline"
+    }
 
     id: Mapped[int] = mapped_column(INTEGER(11), primary_key=True)
     name: Mapped[str] = mapped_column(String(64), nullable=False)
