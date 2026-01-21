@@ -2,11 +2,17 @@
 
 ## Dev
 
-```bash
+```sh
 cd api
 uv run ruff format .
 uv run ruff check .
 uv run ty check .
+```
+
+To run API
+
+```sh
+uv run fastapi dev main.py
 ```
 
 ### Subcontest tree (each endpoint goes one level deeper)
