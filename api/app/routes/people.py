@@ -1,9 +1,10 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Annotated
+from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Path, Query, Response
 from sqlalchemy import select
+from sqlalchemy.orm import Session  # noqa: TC002
 
 from app.db import get_session
 from app.domain.subjects import SUBJECT_ABBREV
@@ -18,9 +19,6 @@ from app.models import (
     t_mentor,
 )
 from app.schemas import ContestantEntry, MentorEntry, PersonSummary
-
-if TYPE_CHECKING:
-    from sqlalchemy.orm import Session
 
 router = APIRouter(tags=["people"])
 

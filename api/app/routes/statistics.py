@@ -3,18 +3,16 @@ from __future__ import annotations
 import csv
 import io
 from enum import Enum
-from typing import TYPE_CHECKING, Annotated
+from typing import Annotated
 
 from fastapi import APIRouter, Depends, Query
 from fastapi.responses import Response
 from sqlalchemy import case, func, or_, select
+from sqlalchemy.orm import Session  # noqa: TC002
 
 from app.db import get_session
 from app.models import AgeGroup, Contestant, Person, Subcontest
 from app.schemas import StudentStatisticsResponse
-
-if TYPE_CHECKING:
-    from sqlalchemy.orm import Session
 
 router = APIRouter(tags=["statistics"])
 

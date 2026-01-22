@@ -13,7 +13,7 @@ dependencies = [
 ]
 
 [dependency-groups]
-dev = ["ruff", "sqlacodegen>=3.2.0", "ty"]
+dev = ["pytest>=8.0.0", "ruff", "sqlacodegen>=3.2.0", "ty"]
 
 [tool.ruff.lint]
 ignore = [
@@ -48,6 +48,7 @@ convention = "google"
 [tool.ruff.lint.per-file-ignores]
 "migrations/*" = ["INP001", "ERA001"]
 "migrations/versions/*" = ["ALL"]
+"tests/*" = ["S101", "PLR2004"]
 
 [tool.ruff.format]
 docstring-code-format = true

@@ -1,16 +1,14 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Annotated
+from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Path, Query, Response
 from sqlalchemy import func, select
+from sqlalchemy.orm import Session  # noqa: TC002
 
 from app.db import get_session
 from app.models import Contestant, Person, School, t_mentor
 from app.schemas import SchoolParticipantsResponse, SchoolSummary
-
-if TYPE_CHECKING:
-    from sqlalchemy.orm import Session
 
 router = APIRouter(tags=["schools"])
 
