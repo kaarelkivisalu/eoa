@@ -23,6 +23,7 @@ class StatisticsFormat(str, Enum):
     json = "json"
     csv = "csv"
 
+
 FIRST_PLACE = 1
 SECOND_PLACE = 2
 THIRD_PLACE = 3
