@@ -228,9 +228,10 @@ def get_results(
 
     subcontest_id = candidates[0]
     payload = get_results_payload(subcontest_id=subcontest_id, session=session)
+    payload_model = ResultsPayload.model_validate(payload)
     if results_format == ResultsFormat.json:
-        return ResultsPayload.model_validate(payload)
-    return payload_as_csv(subcontest_id=subcontest_id, payload=payload)
+        return payload_model
+    return payload_as_csv(subcontest_id=subcontest_id, payload=payload_model)
 
 
 @router.get(
@@ -245,6 +246,7 @@ def get_subcontest_by_id(
     results_format: Annotated[ResultsFormat, RESULTS_FORMAT_QUERY] = ResultsFormat.json,
 ) -> ResultsPayload | Response:
     payload = get_results_payload(subcontest_id=subcontest_id, session=session)
+    payload_model = ResultsPayload.model_validate(payload)
     if results_format == ResultsFormat.json:
-        return ResultsPayload.model_validate(payload)
-    return payload_as_csv(subcontest_id=subcontest_id, payload=payload)
+        return payload_model
+    return payload_as_csv(subcontest_id=subcontest_id, payload=payload_model)
