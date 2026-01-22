@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING, Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Path, Query
 from sqlalchemy import func, select
+from sqlalchemy.orm import Session  # noqa: TC002
 
 from app.db import get_session
 from app.domain.subjects import SUBJECT_ABBREV, SUBJECT_BY_ABBREV, SubjectAbbrev
@@ -15,7 +16,6 @@ from app.services.results import ResultsFormat, get_results_payload, payload_as_
 
 if TYPE_CHECKING:
     from fastapi.responses import Response
-    from sqlalchemy.orm import Session
 
 router = APIRouter(tags=["contest"])
 

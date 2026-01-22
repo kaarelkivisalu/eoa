@@ -18,10 +18,11 @@ from app.models import (
     Subcontest,
     SubcontestColumn,
 )
-from app.schemas import ResultsPayload
 
 if TYPE_CHECKING:
     from sqlalchemy.orm import Session
+
+    from app.schemas import ResultsPayload
 
 
 class ResultsFormat(str, Enum):

@@ -17,6 +17,13 @@ uv run ruff check .
 uv run ty check .
 ```
 
+To run tests:
+
+```sh
+cd api
+uv run pytest
+```
+
 To run API in dev mode:
 
 ```sh

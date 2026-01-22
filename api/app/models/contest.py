@@ -1,10 +1,9 @@
 from __future__ import annotations
 
+import datetime  # noqa: TC003
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    import datetime
-
     from app.models.subcontest import Subcontest
     from app.models.subject import Subject
     from app.models.type import Type
