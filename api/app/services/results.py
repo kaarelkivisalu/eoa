@@ -18,6 +18,7 @@ from app.models import (
     Subcontest,
     SubcontestColumn,
 )
+from app.schemas import ResultsPayload
 
 if TYPE_CHECKING:
     from sqlalchemy.orm import Session
@@ -155,13 +156,13 @@ def get_results_payload(*, subcontest_id: int, session: Session) -> dict[str, ob
     }
 
 
-def payload_as_csv(*, subcontest_id: int, payload: dict[str, object]) -> Response:
-    columns: list[str] = payload.get("columns") or []
-    rows: list[dict[str, object]] = payload.get("rows") or []
+def payload_as_csv(*, subcontest_id: int, payload: ResultsPayload) -> Response:
+    columns = payload.columns
+    rows = payload.rows
 
-    has_age_group = any((r.get("age_group") or "") != "" for r in rows)
-    has_school = any((r.get("school") or "") != "" for r in rows)
-    has_mentor = any(len(r.get("mentors") or []) > 0 for r in rows)
+    has_age_group = any((r.age_group or "") != "" for r in rows)
+    has_school = any((r.school or "") != "" for r in rows)
+    has_mentor = any(len(r.mentors) > 0 for r in rows)
 
     headers: list[str] = ["Koht", "Nimi"]
     if has_age_group:
@@ -178,20 +179,17 @@ def payload_as_csv(*, subcontest_id: int, payload: dict[str, object]) -> Respons
 
     for row in rows:
         out_row: list[str] = [
-            "" if row.get("placement") is None else str(row.get("placement")),
-            str(row.get("person_name") or ""),
+            "" if row.placement is None else str(row.placement),
+            str(row.person_name or ""),
         ]
         if has_age_group:
-            out_row.append(str(row.get("age_group") or ""))
+            out_row.append(str(row.age_group or ""))
         if has_school:
-            out_row.append(str(row.get("school") or ""))
+            out_row.append(str(row.school or ""))
         if has_mentor:
-            mentors = [
-                m for m in (row.get("mentors") or []) if isinstance(m, str) and m
-            ]
-            out_row.append(" / ".join(mentors))
+            out_row.append(" / ".join(m for m in row.mentors if m))
 
-        fields = row.get("fields") or []
+        fields = row.fields
         out_row.extend(str(v or "") for v in fields[: len(columns)])
         out_row.extend("" for _ in range(len(columns) - len(fields)))
 
