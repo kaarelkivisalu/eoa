@@ -174,8 +174,12 @@ def list_age_groups(
             .where(Subject.name == subject_name)
             .where(Contest.year == year)
             .where(func.lower(Type.name) == contest_type_norm)
-            .distinct()
-            .order_by(AgeGroup.min_class.is_(None), AgeGroup.min_class, AgeGroup.name)
+            .group_by(AgeGroup.name)
+            .order_by(
+                func.min(AgeGroup.min_class).is_(None),
+                func.min(AgeGroup.min_class),
+                AgeGroup.name,
+            )
         )
         .scalars()
         .all()

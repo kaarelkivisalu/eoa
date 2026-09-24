@@ -5,6 +5,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from dotenv import load_dotenv
+from sqlalchemy.engine import URL
 
 BASE_DIR = Path(__file__).resolve().parents[1]
 load_dotenv(BASE_DIR / ".env")
@@ -23,10 +24,14 @@ class Settings:
     def database_url(self) -> str:
         connection = self.db_connection.lower()
         driver = "mysql+pymysql" if connection in {"mariadb", "mysql"} else connection
-        return (
-            f"{driver}://{self.db_username}:{self.db_password}"
-            f"@{self.db_host}:{self.db_port}/{self.db_database}"
-        )
+        return URL.create(
+            drivername=driver,
+            username=self.db_username,
+            password=self.db_password,
+            host=self.db_host,
+            port=self.db_port,
+            database=self.db_database,
+        ).render_as_string(hide_password=False)
 
 
 settings = Settings(
