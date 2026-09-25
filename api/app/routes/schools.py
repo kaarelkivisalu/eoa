@@ -90,6 +90,9 @@ def school_students(
         )
         or 0
     )
+    total_participations = session.scalar(
+        select(func.count(Contestant.id)).where(Contestant.school_id == school_id)
+    ) or 0
 
     rows = session.execute(
         select(
@@ -111,6 +114,7 @@ def school_students(
             "school_id": school.id,
             "school_name": school.name,
             "total_students": int(total_students),
+            "total_participations": int(total_participations),
             "hidden_students": max(0, int(total_students) - len(rows)),
             "students": [
                 {

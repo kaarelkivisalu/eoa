@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ThemeToggle } from "@/components/ThemeToggle";
-import { HorizontalScrollHint } from "@/components/HorizontalScrollHint";
 import { HeaderNavigation } from "@/components/HeaderNavigation";
 import { HeaderSearch } from "@/components/HeaderSearch";
 import "./globals.css";
@@ -12,14 +11,30 @@ export const metadata: Metadata = {
   robots: { index: false, follow: true },
 };
 
-export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+export default function RootLayout({
+  children,
+}: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="et" suppressHydrationWarning>
-      <head><script dangerouslySetInnerHTML={{ __html: "try{var t=localStorage.getItem('eoa-theme');if(t==='light'||t==='dark')document.documentElement.dataset.theme=t}catch(e){}" }} /></head>
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html:
+              "try{var t=localStorage.getItem('eoa-theme');if(t==='light'||t==='dark')document.documentElement.dataset.theme=t}catch(e){}",
+          }}
+        />
+      </head>
       <body>
         <header className="site-header">
           <div className="shell header-inner">
-            <Link prefetch={false} href="/" className="brand" aria-label="EOA avaleht">EOA</Link>
+            <Link
+              prefetch={false}
+              href="/"
+              className="brand"
+              aria-label="EOA avaleht"
+            >
+              EOA
+            </Link>
             <div className="header-main">
               <HeaderNavigation />
               <HeaderSearch />
@@ -27,9 +42,18 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
             </div>
           </div>
         </header>
-        <div className="shell site-content"><main id="main-content">{children}</main></div>
-        <HorizontalScrollHint />
-        <footer className="site-footer"><div className="shell">Eesti Olümpiaadide Andmebaas · <Link prefetch={false} href="/data-protection">Andmekaitse</Link> · <a href="mailto:eoakontakt@gmail.com">Kontakt</a></div></footer>
+        <div className="shell site-content">
+          <main id="main-content">{children}</main>
+        </div>
+        <footer className="site-footer">
+          <div className="shell">
+            Eesti Olümpiaadide Andmebaas ·{" "}
+            <Link prefetch={false} href="/data-protection">
+              Andmekaitse
+            </Link>{" "}
+            · <a href="mailto:eoakontakt@gmail.com">Kontakt</a>
+          </div>
+        </footer>
       </body>
     </html>
   );

@@ -109,23 +109,30 @@ def test_contestant_success_maps_fields(
                 FakeResult(
                     rows=[
                         ns(
+                            contestant_id=10,
                             subject_name="Füüsika",
                             type_name="Lahtine",
                             year=2023,
                             age_group="12. klass",
                             placement=1,
                             subcontest_id=99,
+                            school_id=5,
+                            school_name="Test School",
                         ),
                         ns(
+                            contestant_id=11,
                             subject_name=None,
                             type_name=None,
                             year=None,
                             age_group=None,
                             placement=None,
                             subcontest_id=100,
+                            school_id=None,
+                            school_name=None,
                         ),
                     ]
                 ),
+                FakeResult(rows=[ns(contestant_id=10, id=8, name="Mentor A")]),
             ]
         )
     )
@@ -141,6 +148,9 @@ def test_contestant_success_maps_fields(
             "placement": 1,
             "subcontest_id": 99,
             "subject_name": "Füüsika",
+            "school_id": 5,
+            "school_name": "Test School",
+            "mentors": [{"person_id": 8, "person_name": "Mentor A"}],
         },
         {
             "person_name": "Alice Example",
@@ -151,6 +161,9 @@ def test_contestant_success_maps_fields(
             "placement": None,
             "subcontest_id": 100,
             "subject_name": None,
+            "school_id": None,
+            "school_name": None,
+            "mentors": [],
         },
     ]
 
@@ -165,15 +178,19 @@ def test_contestant_missing_subject_abbrev_is_500(
                 FakeResult(
                     rows=[
                         ns(
+                            contestant_id=1,
                             subject_name="Some New Subject",
                             type_name="Lahtine",
                             year=2023,
                             age_group="12. klass",
                             placement=1,
                             subcontest_id=1,
+                            school_id=None,
+                            school_name=None,
                         )
                     ]
                 ),
+                FakeResult(rows=[]),
             ]
         )
     )
@@ -219,6 +236,8 @@ def test_mentor_success_maps_fields(
                             age_group="11. klass",
                             placement=2,
                             subcontest_id=50,
+                            school_id=7,
+                            school_name="Mentor School",
                         )
                     ]
                 ),
@@ -239,6 +258,8 @@ def test_mentor_success_maps_fields(
             "subcontest_id": 50,
             "subject_name": "Matemaatika",
             "student_id": 12,
+            "school_id": 7,
+            "school_name": "Mentor School",
         }
     ]
 
@@ -261,6 +282,8 @@ def test_mentor_missing_subject_abbrev_is_500(
                             age_group="12. klass",
                             placement=1,
                             subcontest_id=1,
+                            school_id=None,
+                            school_name=None,
                         )
                     ]
                 ),

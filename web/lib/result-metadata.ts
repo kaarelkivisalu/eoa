@@ -13,9 +13,19 @@ export function resultMetadata(id: number): ResultMetadata {
   return (records as Record<string, ResultMetadata>)[String(id)] ?? {};
 }
 
-export type OccurrenceMetadata = { status: "not-held" | "source-only"; source?: DocumentLink; questions?: DocumentLink; regulations?: DocumentLink };
+export type OccurrenceMetadata = {
+  status: "not-held" | "source-only";
+  source?: DocumentLink;
+  questions?: DocumentLink;
+  regulations?: DocumentLink;
+};
 
-export function occurrenceMetadata(subject: string, type: string, age: string, year: number | null): OccurrenceMetadata | null {
+export function occurrenceMetadata(
+  subject: string,
+  type: string,
+  age: string,
+  year: number | null,
+): OccurrenceMetadata | null {
   const key = JSON.stringify([subject, type, age, year]);
   return (occurrences as Record<string, OccurrenceMetadata>)[key] ?? null;
 }

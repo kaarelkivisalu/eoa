@@ -100,6 +100,7 @@ def test_school_students_success(
             results=[
                 FakeResult(scalar_one_or_none_value=school),
                 FakeResult(scalar_one_or_none_value=3),
+                FakeResult(scalar_one_or_none_value=9),
                 FakeResult(
                     rows=[
                         ns(person_id=1, person_name="A", participations=3),
@@ -115,6 +116,7 @@ def test_school_students_success(
         "school_id": 5,
         "school_name": "Test School",
         "total_students": 3,
+        "total_participations": 9,
         "hidden_students": 1,
         "students": [
             {"person_id": 1, "person_name": "A", "participations": 3},
@@ -147,6 +149,7 @@ def test_school_mentors_success(
         "school_id": 7,
         "school_name": "Mentor School",
         "total_students": None,
+        "total_participations": None,
         "hidden_students": None,
         "students": None,
         "mentors": [

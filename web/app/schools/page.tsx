@@ -7,21 +7,58 @@ import Link from "next/link";
 
 export const metadata: Metadata = { title: "Koolid" };
 
-export default async function SchoolsPage({ searchParams }: { searchParams: Promise<{ sort?: string; order?: string; page?: string; rows?: string }> }) {
+export default async function SchoolsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{
+    sort?: string;
+    order?: string;
+    page?: string;
+    rows?: string;
+  }>;
+}) {
   const { sort, order, page, rows } = await searchParams;
   const schools = await getApi<SchoolRanking[]>("/site/schools");
-  const sortable = ["school_name", "participations", "students", "hidden_students", "first_places", "second_places", "third_places"] as const;
-  const sorted = sort && sortable.some((key) => key === sort)
-    ? [...schools].sort((a, b) => {
-        const key = sort as (typeof sortable)[number];
-        const comparison = compareValues(a[key], b[key]);
-        return order === "desc" ? -comparison : comparison;
-      })
-    : schools;
+  const sortable = [
+    "school_name",
+    "participations",
+    "students",
+    "first_places",
+    "second_places",
+    "third_places",
+  ] as const;
+  const sorted =
+    sort && sortable.some((key) => key === sort)
+      ? [...schools].sort((a, b) => {
+          const key = sort as (typeof sortable)[number];
+          const comparison = compareValues(a[key], b[key]);
+          return order === "desc" ? -comparison : comparison;
+        })
+      : schools;
 
-  return <>
-    <section className="page-intro"><h1>Koolid</h1><p>Koolide osalemised avaldatavate õpilaste tulemuste põhjal.</p></section>
-    <SchoolRankingTable schools={sorted.map((school) => ({ ...school, school_id: publicId("school", Number(school.school_id)) }))} sort={sort} order={order} page={page} rows={rows} />
-    {schools.some((school) => school.hidden_students > 0) && <p className="visibility-note">Peidetud õpilased ei täida nimekirja kuvamistingimusi või nende nimi pole avaldatav. <Link prefetch={false} href="/data-protection">Andmekaitse</Link></p>}
-  </>;
+  return (
+    <>
+      <section className="page-intro schools-page-intro">
+        <h1>Koolid</h1>
+        <p>Koolide tulemused ja osalemised.</p>
+      </section>
+      <SchoolRankingTable
+        schools={sorted.map((school) => ({
+          ...school,
+          school_id: publicId("school", Number(school.school_id)),
+        }))}
+        sort={sort}
+        order={order}
+        page={page}
+        rows={rows}
+      />
+      <p className="visibility-note">
+        Koolide osalemiste arv hõlmab avaldatavate õpilaste tulemusi. Õpilaste
+        nimesid kuvatakse vähemalt kümne osalemise või esikolmiku koha korral.{" "}
+        <Link prefetch={false} href="/data-protection">
+          Andmekaitsetingimused
+        </Link>
+      </p>
+    </>
+  );
 }

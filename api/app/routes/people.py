@@ -13,6 +13,7 @@ from app.models import (
     Contest,
     Contestant,
     Person,
+    School,
     Subcontest,
     Subject,
     Type,
@@ -120,12 +121,15 @@ def contestant(
 
     rows = session.execute(
         select(
+            Contestant.id.label("contestant_id"),
             Subject.name.label("subject_name"),
             Type.name.label("type_name"),
             Contest.year.label("year"),
             AgeGroup.name.label("age_group"),
             Contestant.placement.label("placement"),
             Contestant.subcontest_id.label("subcontest_id"),
+            School.id.label("school_id"),
+            School.name.label("school_name"),
         )
         .select_from(Contestant)
         .join(Person, Contestant.person_id == Person.id)
@@ -134,10 +138,25 @@ def contestant(
         .join(Subject, Contest.subject_id == Subject.id, isouter=True)
         .join(Type, Contest.type_id == Type.id, isouter=True)
         .join(AgeGroup, Contestant.age_group_id == AgeGroup.id, isouter=True)
+        .join(School, Contestant.school_id == School.id, isouter=True)
         .where(Contestant.person_id == person_id)
         .where(Person.publishable == 1)
         .order_by(Contest.year.is_(None), Contest.year.desc(), Type.name, AgeGroup.name)
     ).all()
+
+    mentors_by_contestant: dict[int, list[PersonSummary]] = {}
+    if rows:
+        mentor_rows = session.execute(
+            select(t_mentor.c.contestant_id, Person.id, Person.name)
+            .join(Person, t_mentor.c.mentor_id == Person.id)
+            .where(t_mentor.c.contestant_id.in_([r.contestant_id for r in rows]))
+            .where(Person.publishable == 1)
+            .order_by(Person.name)
+        ).all()
+        for mentor_row in mentor_rows:
+            mentors_by_contestant.setdefault(mentor_row.contestant_id, []).append(
+                PersonSummary(person_id=mentor_row.id, person_name=mentor_row.name)
+            )
 
     out: list[ContestantEntry] = []
     missing: set[str] = set()
@@ -155,6 +174,9 @@ def contestant(
                 placement=r.placement,
                 subcontest_id=r.subcontest_id,
                 subject_name=r.subject_name,
+                school_id=r.school_id,
+                school_name=r.school_name,
+                mentors=mentors_by_contestant.get(r.contestant_id, []),
             )
         )
 
@@ -197,6 +219,8 @@ def mentor(
             AgeGroup.name.label("age_group"),
             Contestant.placement.label("placement"),
             Contestant.subcontest_id.label("subcontest_id"),
+            School.id.label("school_id"),
+            School.name.label("school_name"),
         )
         .select_from(t_mentor)
         .join(Contestant, t_mentor.c.contestant_id == Contestant.id)
@@ -206,6 +230,7 @@ def mentor(
         .join(Subject, Contest.subject_id == Subject.id, isouter=True)
         .join(Type, Contest.type_id == Type.id, isouter=True)
         .join(AgeGroup, Contestant.age_group_id == AgeGroup.id, isouter=True)
+        .join(School, Contestant.school_id == School.id, isouter=True)
         .join(mentor_person, t_mentor.c.mentor_id == mentor_person.c.id)
         .where(t_mentor.c.mentor_id == person_id)
         .where(student.c.publishable == 1)
@@ -232,6 +257,8 @@ def mentor(
                 subcontest_id=r.subcontest_id,
                 subject_name=r.subject_name,
                 student_id=r.student_id,
+                school_id=r.school_id,
+                school_name=r.school_name,
             )
         )
 

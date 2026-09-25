@@ -3,10 +3,15 @@ import { notFound } from "next/navigation";
 import { cache } from "react";
 
 const baseUrl = process.env.API_INTERNAL_URL ?? "http://localhost:8000";
-const internalHeaders = { "X-EOA-Internal-Token": process.env.EOA_INTERNAL_API_TOKEN ?? "" };
+const internalHeaders = {
+  "X-EOA-Internal-Token": process.env.EOA_INTERNAL_API_TOKEN ?? "",
+};
 
 const getJson = cache(async (path: string): Promise<unknown> => {
-  const response = await fetch(`${baseUrl}${path}`, { cache: "no-store", headers: internalHeaders });
+  const response = await fetch(`${baseUrl}${path}`, {
+    cache: "no-store",
+    headers: internalHeaders,
+  });
   if (response.status === 404) notFound();
   if (!response.ok) throw new Error(`API ${path} returned ${response.status}`);
   return response.json();
@@ -16,11 +21,20 @@ export async function getApi<T>(path: string): Promise<T> {
   return (await getJson(path)) as T;
 }
 
-export async function getApiPage<T>(path: string): Promise<{ items: T; nextOffset: number | null; total: number }> {
-  const response = await fetch(`${baseUrl}${path}`, { cache: "no-store", headers: internalHeaders });
+export async function getApiPage<T>(
+  path: string,
+): Promise<{ items: T; nextOffset: number | null; total: number }> {
+  const response = await fetch(`${baseUrl}${path}`, {
+    cache: "no-store",
+    headers: internalHeaders,
+  });
   if (!response.ok) throw new Error(`API ${path} returned ${response.status}`);
   const next = response.headers.get("X-Result-Next-Offset");
-  return { items: (await response.json()) as T, nextOffset: next === null ? null : Number(next), total: Number(response.headers.get("X-Result-Total") ?? 0) };
+  return {
+    items: (await response.json()) as T,
+    nextOffset: next === null ? null : Number(next),
+    total: Number(response.headers.get("X-Result-Total") ?? 0),
+  };
 }
 
 export type ContestItem = {
@@ -39,7 +53,11 @@ export type ContestItem = {
 
 export type SubjectItem = { subject_abbrev: string; subject: string };
 export const getSubjects = cache(() => getApi<SubjectItem[]>("/contest"));
-export const getSubjectContests = cache((subject: string) => getApi<ContestItem[]>(`/site/contests?subject=${encodeURIComponent(subject)}`));
+export const getSubjectContests = cache((subject: string) =>
+  getApi<ContestItem[]>(
+    `/site/contests?subject=${encodeURIComponent(subject)}`,
+  ),
+);
 
 export type Home = {
   subjects: number;
@@ -48,7 +66,10 @@ export type Home = {
   people: number;
   schools: number;
   latest_year: number | null;
-  recent: (Omit<ContestItem, "year"> & { start_date: string | null; end_date: string | null })[];
+  recent: (Omit<ContestItem, "year"> & {
+    start_date: string | null;
+    end_date: string | null;
+  })[];
   recent_added: ContestItem[];
 };
 
@@ -91,6 +112,9 @@ export type PersonEntry = {
   placement: number | null;
   subcontest_id: number;
   subject_name: string | null;
+  school_id: number | null;
+  school_name: string | null;
+  mentors: PersonLink[];
 };
 
 export type MentorEntry = {
@@ -104,6 +128,8 @@ export type MentorEntry = {
   subcontest_id: number;
   subject_name: string | null;
   student_id: number | null;
+  school_id: number | null;
+  school_name: string | null;
 };
 
 export type SchoolRanking = {
@@ -121,6 +147,7 @@ export type SchoolPeople = {
   school_id: number;
   school_name: string;
   total_students: number | null;
+  total_participations: number | null;
   hidden_students: number | null;
   students: (PersonLink & { participations: number })[] | null;
   mentors: (PersonLink & { participations: number })[] | null;
