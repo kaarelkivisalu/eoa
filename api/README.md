@@ -58,17 +58,34 @@ curl 'http://localhost:8000/subcontests/1' | jq
 
 - `GET /contestant/{person_id}` (only for publishable persons)
 - `GET /mentor/{person_id}` (only for publishable mentors; only includes publishable students)
-- `GET /people/search?q=...&offset=0&limit=20` (only returns publishable persons; check `X-Result-Has-More` / `X-Result-Next-Offset`)
+- `GET /people/search?q=...&role=student|mentor&offset=0&limit=20` (students must meet the public visibility threshold; check `X-Result-Total` and `X-Result-Next-Offset`)
 
 ### Schools
 
 - `GET /schools` (returns `school_id` + `school_name`)
 - `GET /schools/search?q=...&offset=0&limit=20` (returns `school_id` + `school_name`; check `X-Result-Has-More` / `X-Result-Next-Offset`)
-- `GET /schools/{school_id}/students` (only includes publishable students)
-- `GET /schools/{school_id}/mentors` (only includes publishable students and mentors)
+- `GET /schools/{school_id}/students` (only includes publishable students meeting the public visibility threshold)
+- `GET /schools/{school_id}/mentors` (counts distinct students mentored, including students not shown by name)
 
-### Statistics
+### Internal site data
 
 - `GET /statistics/students`
 - `GET /statistics/students?weighted=true`
 - `GET /statistics/students?format=csv`
+- `GET /statistics/mentors`
+- `GET /site/home` → public counts and latest-season results
+- `GET /site/contests?subject=efo` → entries for one subject
+- `GET /site/contests?q=...&offset=0&limit=20` → paged competition search
+- `GET /site/schools` → school rankings based on publishable students
+
+These routes and `/health` are omitted from OpenAPI. In Docker Compose they require
+the `X-EOA-Internal-Token` header from the Next.js server. The public `/api/*`
+proxy rejects them. The only documentation page is `/api-reference` on the site;
+FastAPI's built-in `/docs` and `/redoc` pages are disabled.
+
+The Next.js site in `../web/` calls internal routes on the private Docker network.
+The public `/api/*` proxy allows the documented contest, people, and school endpoints.
+The Python package uses uv's build backend; `uv build --wheel` verifies the
+package layout. `requirements.txt` is the locked production dependency export.
+Regenerate it after dependency changes with
+`uv export --locked --no-dev --no-emit-project --format requirements-txt --output-file requirements.txt`.

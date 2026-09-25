@@ -36,13 +36,14 @@ def test_people_search_pagination_headers_has_more(
     set_session_override(
         FakeSession(
             results=[
+                FakeResult(scalar_one_or_none_value=3),
                 FakeResult(
                     rows=[
                         ns(id=1, name="Alice"),
                         ns(id=2, name="Alicia"),
                         ns(id=3, name="Alina"),
                     ]
-                )
+                ),
             ]
         )
     )
@@ -64,7 +65,10 @@ def test_people_search_pagination_headers_no_more(
 ) -> None:
     set_session_override(
         FakeSession(
-            results=[FakeResult(rows=[ns(id=10, name="Bob"), ns(id=11, name="Bobby")])]
+            results=[
+                FakeResult(scalar_one_or_none_value=7),
+                FakeResult(rows=[ns(id=10, name="Bob"), ns(id=11, name="Bobby")]),
+            ]
         )
     )
     resp = client.get("/people/search", params={"q": "bo", "offset": 5, "limit": 10})
@@ -136,6 +140,7 @@ def test_contestant_success_maps_fields(
             "age_group": "12. klass",
             "placement": 1,
             "subcontest_id": 99,
+            "subject_name": "Füüsika",
         },
         {
             "person_name": "Alice Example",
@@ -145,6 +150,7 @@ def test_contestant_success_maps_fields(
             "age_group": None,
             "placement": None,
             "subcontest_id": 100,
+            "subject_name": None,
         },
     ]
 
@@ -205,6 +211,7 @@ def test_mentor_success_maps_fields(
                 FakeResult(
                     rows=[
                         ns(
+                            student_id=12,
                             student_name="Student A",
                             subject_name="Matemaatika",
                             type_name="Lõppvoor",
@@ -230,6 +237,8 @@ def test_mentor_success_maps_fields(
             "age_group": "11. klass",
             "placement": 2,
             "subcontest_id": 50,
+            "subject_name": "Matemaatika",
+            "student_id": 12,
         }
     ]
 
@@ -244,6 +253,7 @@ def test_mentor_missing_subject_abbrev_is_500(
                 FakeResult(
                     rows=[
                         ns(
+                            student_id=13,
                             student_name="Student",
                             subject_name="Some New Subject",
                             type_name="Lahtine",

@@ -19,5 +19,7 @@ class SchoolParticipation(APIModel):
 class SchoolParticipantsResponse(APIModel):
     school_id: int = Field(ge=1)
     school_name: str
+    total_students: int | None = Field(default=None, ge=0)
+    hidden_students: int | None = Field(default=None, ge=0)
     students: list[SchoolParticipation] | None = None
     mentors: list[SchoolParticipation] | None = None

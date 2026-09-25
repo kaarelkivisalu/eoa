@@ -18,6 +18,7 @@ class ContestantEntry(APIModel):
     age_group: str | None
     placement: int | None
     subcontest_id: int
+    subject_name: str | None = None
 
 
 class MentorEntry(APIModel):
@@ -29,3 +30,5 @@ class MentorEntry(APIModel):
     age_group: str | None
     placement: int | None
     subcontest_id: int
+    subject_name: str | None = None
+    student_id: int | None = None

@@ -10,6 +10,7 @@ from fastapi.responses import Response
 from sqlalchemy import select
 from sqlalchemy.orm import joinedload
 
+from app.domain.subjects import SUBJECT_ABBREV
 from app.models import (
     Contest,
     Contestant,
@@ -120,6 +121,7 @@ def get_results_payload(*, subcontest_id: int, session: Session) -> dict[str, ob
         name = getattr(value, "name", None)
         return name if isinstance(name, str) else None
 
+    subject_name = maybe_name(contest.subject)
     return {
         "title": title,
         "contest_name": contest_name,
@@ -127,14 +129,22 @@ def get_results_payload(*, subcontest_id: int, session: Session) -> dict[str, ob
         "age_group": subcontest.age_group.name,
         "contest": contest.name,
         "year": contest.year,
-        "subject": maybe_name(contest.subject),
+        "start_date": contest.start_date,
+        "end_date": contest.end_date,
+        "subject": subject_name,
+        "subject_abbrev": SUBJECT_ABBREV.get(subject_name) if subject_name else None,
         "type": maybe_name(contest.type),
         "columns": [c.name for c in columns],
+        "tasks_link": subcontest.tasks_link,
+        "solutions_link": subcontest.solutions_link,
+        "description": subcontest.description,
         "rows": [
             {
                 "placement": c.placement,
+                "person_id": c.person_id,
                 "person_name": maybe_name(c.person),
                 "age_group": maybe_name(c.age_group),
+                "school_id": c.school_id,
                 "school": maybe_name(c.school),
                 "mentors": [
                     name
@@ -146,6 +156,13 @@ def get_results_payload(*, subcontest_id: int, session: Session) -> dict[str, ob
                         )
                     )
                     if name is not None
+                ],
+                "mentor_links": [
+                    {"person_id": m.id, "person_name": m.name}
+                    for m in sorted(
+                        (m for m in c.mentor if m.publishable == 1),
+                        key=lambda p: p.name,
+                    )
                 ],
                 "fields": [
                     entries_by_task_and_contestant.get(col.id, {}).get(c.id, "")

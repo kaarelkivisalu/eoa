@@ -11,10 +11,11 @@ from sqlalchemy import case, func, or_, select
 from sqlalchemy.orm import Session  # noqa: TC002
 
 from app.db import get_session
-from app.models import AgeGroup, Contestant, Person, Subcontest
+from app.models import AgeGroup, Contestant, Person, Subcontest, t_mentor
 from app.schemas import StudentStatisticsResponse
+from app.security import require_internal_api
 
-router = APIRouter(tags=["statistics"])
+router = APIRouter(tags=["statistics"], dependencies=[Depends(require_internal_api)])
 
 
 class StatisticsFormat(str, Enum):
@@ -29,8 +30,8 @@ MIN_PARTICIPATIONS = 10
 
 
 def _weight_expr() -> object:
-    diff = AgeGroup.max_class - AgeGroup.min_class
-    return func.least(3, func.greatest(1, func.coalesce(diff, 1)))
+    grades = AgeGroup.max_class - AgeGroup.min_class + 1
+    return func.least(3, func.greatest(1, func.coalesce(grades, 1)))
 
 
 @router.get(
@@ -46,7 +47,7 @@ def student_statistics(
         Query(
             description=(
                 "If true, 1st/2nd/3rd place sums are weighted by "
-                "clamp(age_group.max_class - age_group.min_class, 1, 3)."
+                "min(3, max(1, age_group.max_class - age_group.min_class + 1))."
             )
         ),
     ] = False,
@@ -133,4 +134,71 @@ def student_statistics(
         headers={
             "Content-Disposition": f'attachment; filename="student_statistics{suffix}.csv"'
         },
+    )
+
+
+@router.get("/statistics/mentors", response_model=StudentStatisticsResponse)
+def mentor_statistics(
+    session: Annotated[Session, Depends(get_session)],
+    *,
+    weighted: bool = True,
+    statistics_format: Annotated[
+        StatisticsFormat, Query(alias="format")
+    ] = StatisticsFormat.json,
+) -> StudentStatisticsResponse | Response:
+    place_value = _weight_expr() if weighted else 1
+    total = func.count(Contestant.id).label("total_participations")
+    first = func.sum(
+        case((Contestant.placement == FIRST_PLACE, place_value), else_=0)
+    ).label("first_places")
+    second = func.sum(
+        case((Contestant.placement == SECOND_PLACE, place_value), else_=0)
+    ).label("second_places")
+    third = func.sum(
+        case((Contestant.placement == THIRD_PLACE, place_value), else_=0)
+    ).label("third_places")
+    student = Person.__table__.alias("student")
+    rows = session.execute(
+        select(Person.id, Person.name, total, first, second, third)
+        .select_from(t_mentor)
+        .join(Person, t_mentor.c.mentor_id == Person.id)
+        .join(Contestant, t_mentor.c.contestant_id == Contestant.id)
+        .join(student, Contestant.person_id == student.c.id)
+        .join(Subcontest, Contestant.subcontest_id == Subcontest.id)
+        .join(AgeGroup, Subcontest.age_group_id == AgeGroup.id)
+        .where(Person.publishable == 1)
+        .where(student.c.publishable == 1)
+        .group_by(Person.id, Person.name)
+        .having(or_(total >= MIN_PARTICIPATIONS, first + second + third > 0))
+        .order_by(total.desc(), first.desc(), second.desc(), third.desc(), Person.name)
+    ).all()
+    fields = [
+        "person_id",
+        "person_name",
+        "total_participations",
+        "first_places",
+        "second_places",
+        "third_places",
+    ]
+    payload = [
+        [
+            r.id,
+            r.name,
+            int(r.total_participations),
+            int(r.first_places or 0),
+            int(r.second_places or 0),
+            int(r.third_places or 0),
+        ]
+        for r in rows
+    ]
+    if statistics_format == StatisticsFormat.json:
+        return StudentStatisticsResponse(fields=fields, rows=payload)
+    buf = io.StringIO()
+    writer = csv.writer(buf)
+    writer.writerow(fields)
+    writer.writerows(payload)
+    return Response(
+        content=buf.getvalue(),
+        media_type="text/csv; charset=utf-8",
+        headers={"Content-Disposition": 'attachment; filename="mentor_statistics.csv"'},
     )

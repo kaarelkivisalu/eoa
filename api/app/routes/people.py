@@ -1,9 +1,9 @@
 from __future__ import annotations
 
-from typing import Annotated
+from typing import Annotated, Literal
 
 from fastapi import APIRouter, Depends, HTTPException, Path, Query, Response
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session  # noqa: TC002
 
 from app.db import get_session
@@ -19,12 +19,13 @@ from app.models import (
     t_mentor,
 )
 from app.schemas import ContestantEntry, MentorEntry, PersonSummary
+from app.services.visibility import qualified_student_ids
 
 router = APIRouter(tags=["people"])
 
 
 @router.get("/people/search", response_model=list[PersonSummary])
-def search_people(
+def search_people(  # noqa: PLR0913 - FastAPI query parameters form the public API.
     *,
     q: Annotated[
         str,
@@ -34,15 +35,26 @@ def search_people(
     session: Annotated[Session, Depends(get_session)],
     offset: Annotated[int, Query(ge=0, description="Pagination offset.")] = 0,
     limit: Annotated[int, Query(ge=1, le=200)] = 20,
+    role: Literal["student", "mentor"] = "student",
 ) -> list[PersonSummary]:
     query = q.strip()
     if not query:
         raise HTTPException(status_code=422, detail="Query must not be empty")
 
+    eligible = (
+        Person.id.in_(qualified_student_ids())
+        if role == "student"
+        else Person.id.in_(select(t_mentor.c.mentor_id))
+    )
+    predicate = (
+        Person.publishable == 1,
+        Person.name.contains(query, autoescape=True),
+        eligible,
+    )
+    total = session.scalar(select(func.count(Person.id)).where(*predicate)) or 0
     rows = session.execute(
         select(Person.id, Person.name)
-        .where(Person.publishable == 1)
-        .where(Person.name.contains(query, autoescape=True))
+        .where(*predicate)
         .order_by(Person.name, Person.id)
         .offset(offset)
         .limit(limit + 1)
@@ -53,10 +65,27 @@ def search_people(
     response.headers["X-Result-Offset"] = str(offset)
     response.headers["X-Result-Has-More"] = "true" if has_more else "false"
     response.headers["X-Result-Count"] = str(min(len(rows), limit))
+    response.headers["X-Result-Total"] = str(total)
     if has_more:
         response.headers["X-Result-Next-Offset"] = str(offset + limit)
 
     return [PersonSummary(person_id=r.id, person_name=r.name) for r in rows[:limit]]
+
+
+@router.get("/people/{person_id}", response_model=PersonSummary)
+def get_person(
+    *,
+    person_id: Annotated[int, Path(gt=0)],
+    session: Annotated[Session, Depends(get_session)],
+) -> PersonSummary:
+    row = session.execute(
+        select(Person.id, Person.name)
+        .where(Person.id == person_id)
+        .where(Person.publishable == 1)
+    ).one_or_none()
+    if row is None:
+        raise HTTPException(status_code=404, detail="Not found")
+    return PersonSummary(person_id=row.id, person_name=row.name)
 
 
 def _season(year: int | None) -> str | None:
@@ -122,6 +151,7 @@ def contestant(
                 age_group=r.age_group,
                 placement=r.placement,
                 subcontest_id=r.subcontest_id,
+                subject_name=r.subject_name,
             )
         )
 
@@ -156,6 +186,7 @@ def mentor(
 
     rows = session.execute(
         select(
+            student.c.id.label("student_id"),
             student.c.name.label("student_name"),
             Subject.name.label("subject_name"),
             Type.name.label("type_name"),
@@ -195,6 +226,8 @@ def mentor(
                 age_group=r.age_group,
                 placement=r.placement,
                 subcontest_id=r.subcontest_id,
+                subject_name=r.subject_name,
+                student_id=r.student_id,
             )
         )
 

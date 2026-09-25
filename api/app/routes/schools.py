@@ -9,6 +9,7 @@ from sqlalchemy.orm import Session  # noqa: TC002
 from app.db import get_session
 from app.models import Contestant, Person, School, t_mentor
 from app.schemas import SchoolParticipantsResponse, SchoolSummary
+from app.services.visibility import qualified_student_ids
 
 router = APIRouter(tags=["schools"])
 
@@ -37,6 +38,14 @@ def search_schools(
     if not query:
         raise HTTPException(status_code=422, detail="Query must not be empty")
 
+    total = (
+        session.scalar(
+            select(func.count(School.id)).where(
+                School.name.contains(query, autoescape=True)
+            )
+        )
+        or 0
+    )
     rows = session.execute(
         select(School.id, School.name)
         .where(School.name.contains(query, autoescape=True))
@@ -50,6 +59,7 @@ def search_schools(
     response.headers["X-Result-Offset"] = str(offset)
     response.headers["X-Result-Has-More"] = "true" if has_more else "false"
     response.headers["X-Result-Count"] = str(min(len(rows), limit))
+    response.headers["X-Result-Total"] = str(total)
     if has_more:
         response.headers["X-Result-Next-Offset"] = str(offset + limit)
 
@@ -72,6 +82,14 @@ def school_students(
     session: Annotated[Session, Depends(get_session)],
 ) -> SchoolParticipantsResponse:
     school = _get_school_or_404(school_id=school_id, session=session)
+    total_students = (
+        session.scalar(
+            select(func.count(func.distinct(Contestant.person_id))).where(
+                Contestant.school_id == school_id
+            )
+        )
+        or 0
+    )
 
     rows = session.execute(
         select(
@@ -83,6 +101,7 @@ def school_students(
         .join(Person, Contestant.person_id == Person.id)
         .where(Contestant.school_id == school_id)
         .where(Person.publishable == 1)
+        .where(Person.id.in_(qualified_student_ids()))
         .group_by(Person.id, Person.name)
         .order_by(func.count().desc(), Person.name)
     ).all()
@@ -91,6 +110,8 @@ def school_students(
         {
             "school_id": school.id,
             "school_name": school.name,
+            "total_students": int(total_students),
+            "hidden_students": max(0, int(total_students) - len(rows)),
             "students": [
                 {
                     "person_id": r.person_id,
@@ -111,24 +132,23 @@ def school_mentors(
 ) -> SchoolParticipantsResponse:
     school = _get_school_or_404(school_id=school_id, session=session)
 
-    student = Person.__table__.alias("student")
     mentor_person = Person.__table__.alias("mentor_person")
 
     rows = session.execute(
         select(
             mentor_person.c.id.label("mentor_id"),
             mentor_person.c.name.label("mentor_name"),
-            func.count().label("participations"),
+            func.count(func.distinct(Contestant.person_id)).label("participations"),
         )
         .select_from(t_mentor)
         .join(Contestant, t_mentor.c.contestant_id == Contestant.id)
-        .join(student, Contestant.person_id == student.c.id)
         .join(mentor_person, t_mentor.c.mentor_id == mentor_person.c.id)
         .where(Contestant.school_id == school_id)
-        .where(student.c.publishable == 1)
         .where(mentor_person.c.publishable == 1)
         .group_by(mentor_person.c.id, mentor_person.c.name)
-        .order_by(func.count().desc(), mentor_person.c.name)
+        .order_by(
+            func.count(func.distinct(Contestant.person_id)).desc(), mentor_person.c.name
+        )
     ).all()
 
     return SchoolParticipantsResponse.model_validate(

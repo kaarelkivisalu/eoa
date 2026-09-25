@@ -89,3 +89,6 @@ class FakeSession:
         if not self.results:
             raise AssertionError("Unexpected session.execute() call (no results left)")
         return self.results.pop(0)
+
+    def scalar(self, statement: object) -> object | None:
+        return self.execute(statement).scalar_one_or_none()
