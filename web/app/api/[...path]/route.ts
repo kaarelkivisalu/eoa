@@ -22,7 +22,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
   const upstream = new URL(`${baseUrl}/${segments.map(encodeURIComponent).join("/")}`);
   upstream.search = request.nextUrl.search;
   const response = await fetch(upstream, { cache: "no-store" });
-  const headers = new Headers({ "Cache-Control": "no-store" });
+  const headers = new Headers({ "Cache-Control": "no-store", "X-Robots-Tag": "noindex, nofollow" });
   for (const [name, value] of response.headers) {
     if (["content-type", "content-disposition"].includes(name) || name.startsWith("x-result-")) headers.set(name, value);
   }

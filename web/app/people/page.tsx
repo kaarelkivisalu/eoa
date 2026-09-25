@@ -18,7 +18,7 @@ export default async function PeoplePage({ searchParams }: { searchParams: Promi
   }) : [...data.rows].sort((a, b) => Number(b[3]) - Number(a[3]) || Number(b[4]) - Number(a[4]) || Number(b[5]) - Number(a[5]) || Number(b[2]) - Number(a[2]));
   const publicRows = sorted.map((row) => [publicId("person", Number(row[0])), ...row.slice(1)]);
   return <>
-    <section className="page-intro"><h1>Inimesed</h1><p>Vähemalt kümme osalemist või juhendamist või koht esikolmikus. Esikolmiku kohad on kaalutud vanuserühma klasside arvu järgi, kõige rohkem kolme klassiga.</p><p><Link prefetch={false} href="/data-protection">Miks kõik inimesed siin ei ole?</Link></p><div className="actions"><a href={`/people/download?view=${selected}`}>Laadi alla CSV</a></div></section>
+    <section className="page-intro"><h1>Inimesed</h1><p>Vähemalt kümme osalemist või juhendamist või koht esikolmikus. Esikolmiku kohad on kaalutud vanuserühma klasside arvu järgi, kõige rohkem kolme klassiga.</p><p><Link prefetch={false} href="/data-protection">Miks kõik inimesed siin ei ole?</Link></p>{selected === "mentors" && <div className="actions"><a href="/people/download?view=mentors">Laadi alla CSV</a></div>}</section>
     <nav className="school-tabs" aria-label="Inimeste vaade"><Link prefetch={false} href="/people" aria-current={selected === "students" ? "page" : undefined}>Õpilased</Link><Link prefetch={false} href="/people?view=mentors" aria-current={selected === "mentors" ? "page" : undefined}>Juhendajad</Link></nav>
     <HonorRollTable data={publicRows} sort={sort} order={order} page={page} rows={rows} view={selected} />
   </>;

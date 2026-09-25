@@ -4,6 +4,8 @@ import csv
 import io
 from typing import TYPE_CHECKING, cast
 
+import pytest
+
 from app.schemas import ResultsPayload
 from app.services.results import get_results_payload, payload_as_csv
 
@@ -13,7 +15,10 @@ if TYPE_CHECKING:
     from sqlalchemy.orm import Session
 
 
-def test_hidden_person_keeps_nameless_result_without_related_identifiers() -> None:
+@pytest.mark.parametrize("profile_ids", [[101], []])
+def test_hidden_person_keeps_nameless_result_without_related_identifiers(
+    profile_ids: list[int],
+) -> None:
     group = ns(name="6. klass")
     school = ns(name="Kool")
     mentor = ns(id=9, name="Juhendaja", publishable=1)
@@ -58,6 +63,7 @@ def test_hidden_person_keeps_nameless_result_without_related_identifiers() -> No
             FakeResult(scalar_one_or_none_value=subcontest),
             FakeResult(scalars_list=[ns(id=7, name="Punktid")]),
             FakeResult(scalars_list=[visible, hidden]),
+            FakeResult(scalars_list=profile_ids),
             FakeResult(rows=[(7, 1, "10"), (7, 2, "8")]),
         ]
     )
@@ -68,6 +74,7 @@ def test_hidden_person_keeps_nameless_result_without_related_identifiers() -> No
 
     assert len(payload.rows) == 2
     assert payload.rows[0].person_name == "Nähtav"
+    assert payload.rows[0].person_id == (101 if profile_ids else None)
     assert payload.rows[0].mentor_links[0].person_name == "Juhendaja"
     nameless = payload.rows[1]
     assert nameless.placement == 2

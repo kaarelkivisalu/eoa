@@ -19,7 +19,7 @@ from app.models import (
     t_mentor,
 )
 from app.schemas import ContestantEntry, MentorEntry, PersonSummary
-from app.services.visibility import qualified_student_ids
+from app.services.visibility import public_profile_ids, qualified_student_ids
 
 router = APIRouter(tags=["people"])
 
@@ -82,6 +82,7 @@ def get_person(
         select(Person.id, Person.name)
         .where(Person.id == person_id)
         .where(Person.publishable == 1)
+        .where(Person.id.in_(public_profile_ids()))
     ).one_or_none()
     if row is None:
         raise HTTPException(status_code=404, detail="Not found")
@@ -109,7 +110,9 @@ def contestant(
     session: Annotated[Session, Depends(get_session)],
 ) -> list[ContestantEntry]:
     person_row = session.execute(
-        select(Person.name, Person.publishable).where(Person.id == person_id)
+        select(Person.name, Person.publishable)
+        .where(Person.id == person_id)
+        .where(Person.id.in_(public_profile_ids()))
     ).one_or_none()
     if person_row is None or person_row.publishable != 1:
         raise HTTPException(status_code=404, detail="Not found")
@@ -206,6 +209,7 @@ def mentor(
         .join(mentor_person, t_mentor.c.mentor_id == mentor_person.c.id)
         .where(t_mentor.c.mentor_id == person_id)
         .where(student.c.publishable == 1)
+        .where(student.c.id.in_(qualified_student_ids()))
         .where(mentor_person.c.publishable == 1)
         .order_by(Contest.year.is_(None), Contest.year.desc(), Type.name, AgeGroup.name)
     ).all()

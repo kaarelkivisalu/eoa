@@ -1,6 +1,6 @@
 from sqlalchemy import Select, func, or_, select
 
-from app.models import Contestant
+from app.models import Contestant, Person, t_mentor
 
 MIN_PARTICIPATIONS = 10
 
@@ -15,5 +15,15 @@ def qualified_student_ids() -> Select[tuple[int | None]] | Select[tuple[int]]:
                 func.count(Contestant.id) >= MIN_PARTICIPATIONS,
                 func.sum(Contestant.placement.in_((1, 2, 3))) > 0,
             )
+        )
+    )
+
+
+def public_profile_ids() -> Select[tuple[int]]:
+    """People eligible for a public cross-contest profile."""
+    return select(Person.id).where(
+        or_(
+            Person.id.in_(qualified_student_ids()),
+            Person.id.in_(select(t_mentor.c.mentor_id)),
         )
     )

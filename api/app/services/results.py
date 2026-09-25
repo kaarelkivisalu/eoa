@@ -18,6 +18,7 @@ from app.models import (
     Subcontest,
     SubcontestColumn,
 )
+from app.services.visibility import public_profile_ids
 
 if TYPE_CHECKING:
     from sqlalchemy.orm import Session
@@ -83,6 +84,28 @@ def get_results_payload(*, subcontest_id: int, session: Session) -> dict[str, ob
         .all()
     )
 
+    visible_person_ids = [
+        c.person_id
+        for c in contestants
+        if c.person_id is not None
+        and c.person is not None
+        and c.person.publishable == 1
+    ]
+    profile_ids = (
+        set(
+            session.execute(
+                select(Contestant.person_id)
+                .where(Contestant.person_id.in_(visible_person_ids))
+                .where(Contestant.person_id.in_(public_profile_ids()))
+                .distinct()
+            )
+            .scalars()
+            .all()
+        )
+        if visible_person_ids
+        else set()
+    )
+
     entries_by_task_and_contestant: dict[int, dict[int, str]] = {
         tid: {} for tid in task_ids
     }
@@ -127,7 +150,7 @@ def get_results_payload(*, subcontest_id: int, session: Session) -> dict[str, ob
         )
         return {
             "placement": c.placement,
-            "person_id": c.person_id if named else None,
+            "person_id": c.person_id if named and c.person_id in profile_ids else None,
             "person_name": maybe_name(c.person) if named else None,
             "age_group": maybe_name(c.age_group) if named else None,
             "school_id": c.school_id if named else None,
