@@ -15,7 +15,6 @@ from app.models import (
     Contest,
     Contestant,
     ContestantField,
-    Person,
     Subcontest,
     SubcontestColumn,
 )
@@ -68,9 +67,7 @@ def get_results_payload(*, subcontest_id: int, session: Session) -> dict[str, ob
     contestants = (
         session.execute(
             select(Contestant)
-            .join(Person, Contestant.person_id == Person.id)
             .where(Contestant.subcontest_id == subcontest_id)
-            .where(Person.publishable == 1)
             .options(
                 joinedload(Contestant.person),
                 joinedload(Contestant.age_group),
@@ -121,6 +118,30 @@ def get_results_payload(*, subcontest_id: int, session: Session) -> dict[str, ob
         name = getattr(value, "name", None)
         return name if isinstance(name, str) else None
 
+    def public_row(c: Contestant) -> dict[str, object]:
+        named = c.person is not None and c.person.publishable == 1
+        mentors = (
+            sorted((m for m in c.mentor if m.publishable == 1), key=lambda p: p.name)
+            if named
+            else []
+        )
+        return {
+            "placement": c.placement,
+            "person_id": c.person_id if named else None,
+            "person_name": maybe_name(c.person) if named else None,
+            "age_group": maybe_name(c.age_group) if named else None,
+            "school_id": c.school_id if named else None,
+            "school": maybe_name(c.school) if named else None,
+            "mentors": [m.name for m in mentors],
+            "mentor_links": [
+                {"person_id": m.id, "person_name": m.name} for m in mentors
+            ],
+            "fields": [
+                entries_by_task_and_contestant.get(col.id, {}).get(c.id, "")
+                for col in columns
+            ],
+        }
+
     subject_name = maybe_name(contest.subject)
     return {
         "title": title,
@@ -138,39 +159,7 @@ def get_results_payload(*, subcontest_id: int, session: Session) -> dict[str, ob
         "tasks_link": subcontest.tasks_link,
         "solutions_link": subcontest.solutions_link,
         "description": subcontest.description,
-        "rows": [
-            {
-                "placement": c.placement,
-                "person_id": c.person_id,
-                "person_name": maybe_name(c.person),
-                "age_group": maybe_name(c.age_group),
-                "school_id": c.school_id,
-                "school": maybe_name(c.school),
-                "mentors": [
-                    name
-                    for name in (
-                        maybe_name(m)
-                        for m in sorted(
-                            (m for m in c.mentor if getattr(m, "publishable", 1) == 1),
-                            key=lambda p: p.name,
-                        )
-                    )
-                    if name is not None
-                ],
-                "mentor_links": [
-                    {"person_id": m.id, "person_name": m.name}
-                    for m in sorted(
-                        (m for m in c.mentor if m.publishable == 1),
-                        key=lambda p: p.name,
-                    )
-                ],
-                "fields": [
-                    entries_by_task_and_contestant.get(col.id, {}).get(c.id, "")
-                    for col in columns
-                ],
-            }
-            for c in contestants
-        ],
+        "rows": [public_row(c) for c in contestants],
     }
 
 

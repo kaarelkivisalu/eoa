@@ -8,38 +8,34 @@ export default function DataProtectionPage() {
       <header className="page-intro">
         <h1>Andmekaitsetingimused</h1>
         <p>Siin selgitame, kuidas Eesti Olümpiaadide Andmebaas (EOA) töötleb olümpiaaditulemuste ja veebilehe kasutamisega seotud isikuandmeid.</p>
-        <p><strong>Dokumendi kavand: enne avaldamist tuleb täita nurksulgudes väljad ning kinnitada õiguslik alus ja avaldamisviisid.</strong></p>
+        <p>Kui oled õpilane: EOA võib näidata sinu nime ja olümpiaaditulemust. Kui tulemus on vale või sa ei soovi oma nime siin näha, kirjuta meile aadressil <a href="mailto:eoakontakt@gmail.com">eoakontakt@gmail.com</a>. Vaatame sinu soovi läbi ja vastame sulle.</p>
+        <p><strong>Dokumendi kavand:</strong> tulemuste avaldamise õigustatud huvi hinnang on lõpetamata. Vastutava töötleja andmed tuleb lisada enne teate lõplikku kasutamist.</p>
       </header>
-
-      <section aria-labelledby="controller">
-        <h2 id="controller">Vastutav töötleja</h2>
-        <p>Vastutav töötleja: <strong>[füüsilise isiku täisnimi / mittetulundusühingu registrijärgne nimi ja registrikood]</strong>. Aadress: <strong>[postiaadress]</strong>. Andmekaitseküsimused ja taotlused: <a href="mailto:eoakontakt@gmail.com">eoakontakt@gmail.com</a>.</p>
-        <p>Kui eesmärgid ja põhilised töötlemisviisid määravad koos mitu isikut, lisame siia kõigi kaasvastutavate töötlejate nimed, kontaktid ning vastutusjaotuse põhisisu.</p>
-      </section>
 
       <section aria-labelledby="data">
         <h2 id="data">Andmed ja nende päritolu</h2>
-        <p>Töötleme õpilase ning õpetaja või juhendaja nime, kooli, klassi või vanuserühma, võistluse ja õppeaasta andmeid ning tulemust. Mõne võistluse puhul sisaldab tulemus punkte ja muid tulemuse osi. Andmed pärinevad korraldajate avaldatud tulemustest või EOA-le edastatud materjalidest. Vanemate kirjete täpne algallikas ei pruugi olla säilinud; konkreetse kirje teadaoleva allika saab meilt küsida.</p>
-        <p>Kui kirjutate meile, töötleme teie kirjas sisalduvaid andmeid ja vastamiseks vajalikku suhtlust. Kirjutamine on vabatahtlik, kuid ilma kontaktandmeteta ei pruugi me saada vastata. Veebilehe kasutamisel võib server töödelda päringu tehnilisi andmeid, sealhulgas IP-aadressi, päringu aega ja brauseri teavet. <strong>[Kinnitada logimise tegelik ulatus.]</strong></p>
+        <p>Töötleme õpilase ning õpetaja või juhendaja nime, kooli, klassi või vanuserühma, võistluse ja õppeaasta andmeid ning tulemust. Mõne võistluse puhul sisaldab tulemus punkte ja muid tulemuse osi. Kõik seni kogutud tulemused pärinevad korraldajate avalikult kättesaadavatelt lehtedelt. Konkreetse kirje teadaoleva algallika saab meilt küsida.</p>
+        <p>Kui kirjutate meile, töötleme teie kirjas sisalduvaid andmeid ja vastamiseks vajalikku suhtlust. Kirjutamine on vabatahtlik, kuid ilma kontaktandmeteta ei pruugi me saada vastata. Veebilehe kasutamisel töötleb server päringu teenindamiseks tehnilisi andmeid, sealhulgas IP-aadressi ja päringu aega. EOA ei salvesta eraldi külastusloge.</p>
       </section>
 
       <section aria-labelledby="purpose">
         <h2 id="purpose">Eesmärgid ja õiguslik alus</h2>
-        <p>Koondame, kontrollime ja säilitame tulemusi Eesti olümpiaadide ajaloo talletamiseks, varasemate saavutuste tõendamiseks ning õpilaste ja juhendajate panuse nähtavaks tegemiseks. Avaldame tulemusi veebis ainult ulatuses, mille vajalikkust ja mõju oleme hinnanud.</p>
-        <p><strong>Kavandatav alus:</strong> isikuandmete kaitse üldmääruse artikli 6 lõike 1 punkt f — vastutava töötleja ja avalikkuse õigustatud huvi säilitada ning leida olümpiaaditulemusi. See alus kehtib ainult siis, kui iga töötlemisviisi vajalikkus ja huvide tasakaal, eriti laste puhul, on dokumenteeritud ning andmesubjektide õigused ei kaalu huvi üles. <strong>[Kinnitada hinnangu tulemus ja vajaduse korral eristada alused töötlemisviiside kaupa.]</strong></p>
-        <p>Andmekaitseõigustega seotud pöördumistele vastamiseks töötleme kirjavahetust üldmääruse artikli 6 lõike 1 punkti c alusel osas, milles see on vajalik õigusliku kohustuse täitmiseks. Muude päringute ja veebilehe tehnilise toimimise kavandatav alus on punkt f. <strong>[Kinnitada tegelikud eesmärgid, logid ja teenuseosutajad.]</strong></p>
-        <p>See, et tulemus oli juba avalik või et korraldaja saatis selle EOA-le, ei anna iseenesest EOA-le õiguslikku alust. Kui kasutame mõne kirje jaoks nõusolekut, teavitame sellest eraldi ning nõusoleku saab tagasi võtta.</p>
+        <p>Koondame, kontrollime ja säilitame tulemusi Eesti olümpiaadide ajaloo talletamiseks, varasemate saavutuste tõendamiseks ning õpilaste ja juhendajate panuse nähtavaks tegemiseks. Tulemusi saab veebis sirvida, otsida ja alla laadida.</p>
+        <p><strong>Kavandatav alus:</strong> isikuandmete kaitse üldmääruse artikli 6 lõike 1 punkt f — vastutava töötleja ja avalikkuse õigustatud huvi säilitada ning leida olümpiaaditulemusi. See alus kehtib ainult siis, kui iga töötlemisviisi vajalikkus ja huvide tasakaal, eriti laste puhul, on dokumenteeritud ning andmesubjektide õigused ei kaalu huvi üles. Nimeotsingu, isikuprofiilide, edetabelite ning API ja CSV kaudu avaldamise hindamine on veel lõpetamata.</p>
+        <p>Andmekaitseõigustega seotud pöördumistele vastamiseks töötleme kirjavahetust üldmääruse artikli 6 lõike 1 punkti c alusel osas, milles see on vajalik õigusliku kohustuse täitmiseks. Muude päringute ja veebilehe tehnilise toimimise kavandatav alus on punkt f.</p>
+        <p>See, et tulemus oli juba avalik, ei anna iseenesest EOA-le õiguslikku alust. Praegu ei tugine EOA tulemuste töötlemisel osalejate nõusolekule.</p>
       </section>
 
       <section aria-labelledby="publication">
         <h2 id="publication">Avaldamine ja vastuvõtjad</h2>
-        <p>Võistluse tulemustabelis võivad olla nähtavad avaldamiseks sobivaks hinnatud nimed ja tulemused. Nimepõhises õpilase otsingus, kooli õpilaste nimekirjas ja koondtabelis kuvatakse õpilast siis, kui tal on vähemalt kümme osalemist või vähemalt üks koht esikolmikus. Juhendajate nimepõhisele otsingule seda piiri ei kohaldata. Piir ei peida õpilase nime võistluse tulemustabelist ega välista kirje leidmist muul viisil. Kui nimi ei ole avaldamiseks lubatud, seda nimena ei kuvata.</p>
-        <p>Avaldatud tulemused on nähtavad veebikülastajatele ning kättesaadavad ka avaliku API ja CSV allalaadimise kaudu. Külastajad saavad avaldatust koopia teha; nende edasine iseseisev kasutus ei ole EOA kontrolli all. Majutus- ja tehnilised teenuseosutajad võivad andmeid töödelda EOA nimel: <strong>[teenuseosutajad või kategooriad ja asukohariigid]</strong>. Väljapoole Euroopa Majanduspiirkonda edastamise olemasolu ja kaitsemeetmed: <strong>[täpsustada; kui ei toimu, märkida seda]</strong>.</p>
+        <p>Võistluse tulemustabelis võivad olla nähtavad nimed ja tulemused. Avatud võistlustel ei avalda korraldaja tavaliselt kõige madalamaid punkte; kutsetega võistlustel võivad avalikud olla kõik tulemused. Nimepõhises õpilase otsingus, kooli õpilaste nimekirjas ja koondtabelis kuvatakse õpilast siis, kui tal on vähemalt kümme osalemist või vähemalt üks koht esikolmikus. Juhendajate nimepõhisele otsingule seda piiri ei kohaldata. Piir ei peida õpilase nime võistluse tulemustabelist ega välista kirje leidmist muul viisil. Kui nime avalik kuvamine on peatatud, jääb tulemus võistluse tabelisse nimeta; selle juures ei näita EOA ka inimese profiililinki, kooli, klassi ega juhendajat.</p>
+        <p>Avaldatud tulemused on nähtavad veebikülastajatele ning kättesaadavad ka avaliku API ja CSV allalaadimise kaudu. Külastajad saavad avaldatust koopia teha; nende edasine iseseisev kasutus ei ole EOA kontrolli all. Veebileht ja andmebaas asuvad Hetzneri Soome serveris; varukoopiad asuvad Hetzneri Saksamaa ja Scaleway Prantsusmaa serverites. Kirjavahetuseks kasutame Google Gmaili. Google võib töödelda kirjavahetuse andmeid ka väljaspool Euroopa Majanduspiirkonda ning kirjeldab oma <a href="https://policies.google.com/privacy/frameworks?hl=et">andmeedastuse kaitsemeetmeid</a>. EOA ei kasuta teisi teenuseosutajaid.</p>
       </section>
 
       <section aria-labelledby="retention">
         <h2 id="retention">Säilitamine</h2>
-        <p>Tulemusi säilitame ajaloolise arhiivi eesmärgil seni, kuni andmete tuvastataval kujul säilitamine on selle eesmärgi jaoks vajalik. <strong>[Kinnitada läbivaatamise sagedus ja kustutamise või anonüümimise kriteeriumid.]</strong> Kui eesmärk kaob ja muud alust ei ole, kustutame või anonüümime andmed. Õiguste taotluste kirjavahetuse ja tehniliste logide säilitustähtajad: <strong>[täpsustada eri andmeliikide kaupa]</strong>.</p>
+        <p>Tulemusi säilitame tuvastataval kujul seni, kuni see on ajaloolise arhiivi eesmärgiks vajalik ja töötlemisel on õiguslik alus. Vaatame vähemalt kord aastas üle andmeliikide ja avaldamisviiside vajalikkuse ning osa algallikaid; vaidlustatud või parandatud kirje vaatame üle viivitamata. Kui eesmärk või alus kaob, kustutame või anonüümime asjaomased andmed EOA kontrollitavates väljundites.</p>
+        <p>Tavalise kirjavahetuse kustutame 12 kuud pärast viimast sisulist vastust või juhtumi sulgemist. Andmekaitseõiguste taotluse kohta säilitame minimaalset menetlusjälge kolm aastat pärast juhtumi sulgemist. Isikusamasuse kontrolliks küsitud eraldi tõendi kustutame pärast kontrolli, hiljemalt 30 päeva jooksul, välja arvatud juhul, kui konkreetne vaidlus nõuab pikemat säilitamist. Varukoopiaid hoiame kuni 90 päeva; taastamisel rakendame enne taasavalikustamist vahepealsed parandused ja varjamised.</p>
       </section>
 
       <section aria-labelledby="rights">
@@ -51,12 +47,12 @@ export default function DataProtectionPage() {
 
       <section aria-labelledby="site-storage">
         <h2 id="site-storage">Veebilehe kohalik salvestus</h2>
-        <p>Värviteema valimisel salvestab teie brauser seadmesse võtme <code>eoa-theme</code>, et valik järgmisel külastusel taastada. Valik „Süsteemi järgi” eemaldab selle võtme. <strong>[Kinnitada, kas majutus või lisateenused kasutavad küpsiseid või muud seadmesalvestust; vajaduse korral täiendada teavet ja nõusoleku lahendust.]</strong></p>
+        <p>Värviteema valimisel salvestab teie brauser seadmesse võtme <code>eoa-theme</code>, et valik järgmisel külastusel taastada. Valik „Süsteemi järgi” eemaldab selle võtme. EOA ei kasuta veebilehel analüütika- ega reklaamiküpsiseid.</p>
       </section>
 
       <section aria-labelledby="automated-decisions">
         <h2 id="automated-decisions">Automaatotsused</h2>
-        <p>Veebileht arvutab tulemuste põhjal otsingu- ja edetabelivaateid. <strong>[Kinnitada, et EOA ei tee üksnes automatiseeritud töötlusel põhinevaid otsuseid, millel on isikule õiguslik või samaväärselt märkimisväärne mõju; vastasel juhul lisada nõutav selgitus.]</strong></p>
+        <p>Veebileht arvutab tulemuste põhjal otsingu- ja edetabelivaateid. EOA ei tee nende andmete põhjal üksnes automatiseeritud otsuseid, millel on inimesele õiguslik või samaväärselt märkimisväärne mõju.</p>
       </section>
 
       <section aria-labelledby="complaint">
